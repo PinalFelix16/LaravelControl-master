@@ -11,7 +11,6 @@ class Nomina extends Model
 
     // Especifica el nombre de la tabla si no sigue la convención plural
     protected $table = 'nominas';
-    public $timestamps = false;
 
     // Lista de columnas que pueden ser asignadas masivamente
     protected $fillable = [

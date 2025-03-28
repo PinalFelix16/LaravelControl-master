@@ -50,23 +50,33 @@ class ClaseController extends Controller
     // Mostrar una clase específica
     public function show($id)
     {
-        return Clase::find($id);
-    }
-
-    // Actualizar una clase existente
-    /*public function update(Request $request, $id)
-    {
-        $clase = Clase::findOrFail($id);
-        $clase->update($request->all());
+        $clase = Clase::find($id);
+    
+        if (!$clase) {
+            return response()->json(['error' => 'Clase no encontrada'], 404);
+        }
+    
         return response()->json($clase, 200);
     }
+    
+ 
 
     // Eliminar una clase
-    public function destroy($id)
-    {
-        Clase::destroy($id);
-        return response()->json(null, 204);
-    }*/
+    public function destroy($id){
+    // Encontrar la clase por su ID
+    $clase = Clase::find($id);
+
+    // Verificar si la clase existe
+    if (!$clase) {
+        return response()->json(['error' => 'Clase no encontrada'], 404);
+    }
+
+    // Eliminar la clase
+    $clase->delete();
+
+    return response()->json(['message' => 'Clase eliminada con éxito'], 200);
+}
+
 //Crear Clase
 public function store(Request $request)
 {

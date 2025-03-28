@@ -42,11 +42,6 @@ class UsuarioController extends Controller
         Usuario::destroy($id);
         return response()->json(null, 204);
     }
-
-    public function listaUsuarios() {
-        $usuarios = DB::table('usuarios')->select('id', 'nombre')->get();
-        return response()->json($usuarios, 200);
-    }
 //RECARGOS
     public function agregarRecargos()
     {

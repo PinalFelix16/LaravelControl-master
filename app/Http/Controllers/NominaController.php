@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Nomina;
-use App\Models\RegistroNomina;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,54 +11,7 @@ class NominaController extends Controller
     // Mostrar todas las nóminas
     public function index()
     {
-        $nominas = Nomina::all();
-        $totalfinal = 0;
-        $num = 1;
-
-        $filas = $nominas->count();
-
-        if ($filas != 0) {
-            $response = [];
-            foreach ($nominas as $result) {
-                $fecha = $result->fecha;
-                $id_autor = $result->id_autor;
-
-                $ano = date("Y", strtotime($fecha));
-                $mes = date("M", strtotime($fecha));
-                $dia = date("d", strtotime($fecha));
-
-                $meses = [
-                    'Jan' => 'ENERO', 'Feb' => 'FEBRERO', 'Mar' => 'MARZO',
-                    'Apr' => 'ABRIL', 'May' => 'MAYO', 'Jun' => 'JUNIO',
-                    'Jul' => 'JULIO', 'Aug' => 'AGOSTO', 'Sep' => 'SEPTIEMBRE',
-                    'Oct' => 'OCTUBRE', 'Nov' => 'NOVIEMBRE', 'Dec' => 'DICIEMBRE'
-                ];
-
-                $mes = $meses[$mes] ?? $mes;
-                $fecha = strtoupper("$dia DE $mes DEL $ano");
-
-                $autor = DB::table('usuarios')->where('id', $id_autor)->value('nombre');
-
-                $response[] = [
-                    ...$result->toArray(),
-                    'num' => $num,
-                    'formated_fecha' => $fecha,
-                    'autor' => $autor,
-                ];
-
-                $num++;
-                $totalfinal += $result->total;
-            }
-
-            return response()->json([
-                'data' => $response,
-                'totalfinal' => number_format($totalfinal, 2)
-            ], 200);
-        } else {
-            return response()->json([
-                'message' => 'NO HAY NÓMINAS REALIZADAS'
-            ], 404);
-        }
+        return Nomina::all();
     }
 
     // Mostrar una nómina específica
@@ -89,10 +41,10 @@ class NominaController extends Controller
         Nomina::destroy($id);
         return response()->json(null, 204);
     }
-
 //NOMINAS
-    public function mostrarNominas($anio)
+    public function mostrarNominas(Request $request)
     {
+        $anio = $request->query('anio');
         $totalfinal = 0;
         $num = 1;
 
@@ -100,14 +52,20 @@ class NominaController extends Controller
             ->whereYear('fecha', $anio)
             ->orderBy('fecha', 'DESC')
             ->get();
-    
+
         $filas = $nominas->count();
 
         if ($filas != 0) {
             $response = [];
             foreach ($nominas as $result) {
+                $id_nomina = $result->id_nomina;
                 $fecha = $result->fecha;
                 $id_autor = $result->id_autor;
+                $clases = number_format($result->clases, 2);
+                $inscripciones = number_format($result->inscripciones, 2);
+                $recargos = number_format($result->recargos, 2);
+                $total = number_format($result->total, 2);
+                $total_neto = number_format($result->total_neto, 2);
 
                 $ano = date("Y", strtotime($fecha));
                 $mes = date("M", strtotime($fecha));
@@ -126,10 +84,15 @@ class NominaController extends Controller
                 $autor = DB::table('usuarios')->where('id', $id_autor)->value('nombre');
 
                 $response[] = [
-                    ...(array)$result,
                     'num' => $num,
-                    'formated_fecha' => $fecha,
+                    'fecha' => $fecha,
                     'autor' => $autor,
+                    'clases' => $clases,
+                    'inscripciones' => $inscripciones,
+                    'recargos' => $recargos,
+                    'total' => $total,
+                    'total_neto' => $total_neto,
+                    'id_nomina' => $id_nomina
                 ];
 
                 $num++;
@@ -171,20 +134,6 @@ class NominaController extends Controller
         $filas_2 = DB::table('pagos_secundarios')->where('nomina', '0')->count();
 
         if ($filas != 0 || $filas_2 != 0) {
-            $nomina = Nomina::create([
-                'fecha' => "2021-01-01",
-                'id_autor' => "",
-                'clases' => 0,
-                'inscripciones' => 0,
-                'recargos' => 0,
-                'total' => 0,
-                'comisiones' => 0,
-                'total_neto' => 0,
-                'porcentaje_comision' => 0
-            ]);
-
-            $id_nomina = $nomina->id_nomina;
-
             if ($filas != 0) {
                 $programas = DB::table('programas_predefinidos')->orderBy('id_programa')->get();
 
@@ -214,7 +163,7 @@ class NominaController extends Controller
                         $gran_total_comisiones += $total_comision;
 
                         DB::table('registro_nominas')->insert([
-                            'id_nomina' => $id_nomina,
+                            'id_nomina' => null,
                             'id_maestro' => $id_maestro,
                             'id_clase' => $id_clase,
                             'total' => $total_clase,
@@ -250,18 +199,20 @@ class NominaController extends Controller
             $ingresos_totales = $gran_total_clases + $gran_total_inscripciones + $gran_total_recargos;
             $gran_total_neto = $ingresos_totales - $gran_total_comisiones;
 
-            
-            $nomina->fecha = $fecha;
-            $nomina->id_autor = $request->id;
-            $nomina->clases = $gran_total_clases;
-            $nomina->inscripciones = $gran_total_inscripciones;
-            $nomina->recargos = $gran_total_recargos;
-            $nomina->total = $ingresos_totales;
-            $nomina->comisiones = $gran_total_comisiones;
-            $nomina->total_neto = $gran_total_neto;
-            $nomina->porcentaje_comision = $porcentaje_comision;
+            DB::table('nominas')->insert([
+                'id_nomina' => null,
+                'fecha' => $fecha,
+                'id_autor' => $request->user()->id,
+                'clases' => $gran_total_clases,
+                'inscripciones' => $gran_total_inscripciones,
+                'recargos' => $gran_total_recargos,
+                'total' => $ingresos_totales,
+                'comisiones' => $gran_total_comisiones,
+                'total_neto' => $gran_total_neto,
+                'porcentaje_comision' => $porcentaje_comision
+            ]);
 
-            $nomina->save();
+            $id_nomina = DB::getPdo()->lastInsertId();
 
             DB::table('pagos_fragmentados')->where('nomina', 0)->update(['nomina' => $id_nomina]);
             DB::table('pagos_secundarios')->where('nomina', 0)->update(['nomina' => $id_nomina]);
@@ -366,7 +317,7 @@ class NominaController extends Controller
                     'comision' => number_format($comision, 2)
                 ];
             }
- 
+
             $data[] = [
                 'nombre_maestro' => $nombre_maestro,
                 'clases' => $clases,
