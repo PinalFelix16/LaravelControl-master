@@ -17,34 +17,35 @@ class ClaseController extends Controller
     public function index()
     {
         $programas = ProgramaPredefinido::where('ocultar', 0)
-        ->orderBy('nombre')
-        ->get();
+            ->orderBy('nombre')
+            ->get();
 
         $resultado = [];
 
         foreach ($programas as $programa) {
             $clases = Clase::leftJoin('maestros', 'clases.id_maestro', '=', 'maestros.id_maestro')
-                            ->select('clases.*', 'maestros.nombre_titular', 'maestros.nombre as nombre_maestro', 'maestros.direccion', 'maestros.fecha_nac', 'maestros.rfc', 'maestros.celular', 'maestros.status as status_maestro')
-                            ->where('clases.id_programa', $programa->id_programa)
-                            ->orderBy('clases.porcentaje', 'DESC')
-                            ->get();
+                ->select('clases.*', 'maestros.nombre_titular', 'maestros.nombre as nombre_maestro', 'maestros.direccion', 'maestros.fecha_nac', 'maestros.rfc', 'maestros.celular', 'maestros.status as status_maestro')
+                ->where('clases.id_programa', $programa->id_programa)
+                ->orderBy('clases.porcentaje', 'DESC')
+                ->get();
 
             $clasesArreglo = $clases->toArray();
 
-            $resultado[] = [
-                'id_programa' => $programa->id_programa,
-                'nombre_programa' => $programa->nombre,
-                'mensualidad' => $programa->mensualidad,
-                'nivel' => $programa->nivel,
-                'complex' => $programa->complex,
-                'status' => $programa->status,
-                'ocultar' => $programa->ocultar,
-                'clases' => $clasesArreglo
-            ];
+            if (count($clasesArreglo) > 0) {
+                $resultado[] = [
+                    'id_programa' => $programa->id_programa,
+                    'nombre_programa' => $programa->nombre,
+                    'mensualidad' => $programa->mensualidad,
+                    'nivel' => $programa->nivel,
+                    'complex' => $programa->complex,
+                    'status' => $programa->status,
+                    'ocultar' => $programa->ocultar,
+                    'clases' => $clasesArreglo
+                ];
+            }
         }
 
         return response()->json($resultado);
-
     }
 
     // Mostrar una clase específica
@@ -59,148 +60,149 @@ class ClaseController extends Controller
         $clase = Clase::findOrFail($id);
         $clase->update($request->all());
         return response()->json($clase, 200);
-    }
+    }*/
 
     // Eliminar una clase
     public function destroy($id)
     {
-        Clase::destroy($id);
-        return response()->json(null, 204);
-    }*/
-//Crear Clase
-public function store(Request $request)
-{
-    // Obtiene los datos del formulario
-    $campos = $request->input('campos'); // Número de clases
-    $nombre = strtoupper($request->input('nombre'));
-    $mensualidad = $request->input('mensualidad');
-    $complex = $request->input('complex') === 'Yes' ? '1' : '0'; // Convertir a '1' o '0'
-    $nivel = strtoupper($request->input('nivel'));
-    $status = '1';
-    $ocultar = '0';
+        $clase = Clase::where(["id_programa" => $id])->delete();
+        return response()->json($clase, 204);
+    }
 
-    $nivelString = strtoupper($request->input('nivel'));
+    //Crear Clase
+    public function store(Request $request)
+    {
+        // Obtiene los datos del formulario
+        $campos = $request->input('campos'); // Número de clases
+        $nombre = strtoupper($request->input('nombre'));
+        $mensualidad = $request->input('mensualidad');
+        $complex = $request->input('complex') === 'Yes' ? '1' : '0'; // Convertir a '1' o '0'
+        $nivel = strtoupper($request->input('nivel'));
+        $status = '1';
+        $ocultar = '0';
 
-    // Convertir el nivel a un valor entero basado en el texto
-    $niveles = [
-        'INFANTIL' => '001',
-        'ADULTOS' => '002',
-        'MULTINIVEL' => '003',
-        'PRINCIPIANTE' => '004',
-        'INTERMEDIO' => '005',
-        'INTERMEDIO/AVANZADO' => '006',
-        'AVANZADO' => '007'
-    ];
+        $nivelString = strtoupper($request->input('nivel'));
 
-    $nivel = $niveles[$nivelString] ?? '000'; // Valor por defecto si el nivel no está en el array
+        // Convertir el nivel a un valor entero basado en el texto
+        $niveles = [
+            'INFANTIL' => '001',
+            'ADULTOS' => '002',
+            'MULTINIVEL' => '003',
+            'PRINCIPIANTE' => '004',
+            'INTERMEDIO' => '005',
+            'INTERMEDIO/AVANZADO' => '006',
+            'AVANZADO' => '007'
+        ];
+
+        $nivel = $niveles[$nivelString] ?? '000'; // Valor por defecto si el nivel no está en el array
 
 
-    // Verificar si el nombre del programa ya existe
-    $programaExistente = DB::table('programas_predefinidos')->where('nombre', $nombre)->first();
+        // Verificar si el nombre del programa ya existe
+        $programaExistente = DB::table('programas_predefinidos')->where('nombre', $nombre)->first();
 
-    if (!$programaExistente) {
-        // Insertar el nuevo programa
-        $id_programa = DB::table('programas_predefinidos')->insertGetId([
-            'nombre' => $nombre,
-            'mensualidad' => $mensualidad,
-            'nivel' => $nivel,
-            'complex' => $complex,
-            'status' => $status,
-            'ocultar' => $ocultar
-        ]);
-
-        // Insertar las clases asociadas al programa
-        foreach ($request->input('clases') as $index => $clase) {
-            $claseNombre = strtoupper($clase['clase']);
-            $maestro = $clase['maestro'];
-            $informacion = strtoupper($clase['informacion']);
-            $porcentaje = $clase['porcentaje'];
-            $personal = $clase['personal'] ?? '0'; // Valor por defecto '0'
-
-            DB::table('clases')->insert([
-                'id_programa' => $id_programa,
-                'nombre' => $claseNombre,
-                'id_maestro' => $maestro,
-                'informacion' => $informacion,
-                'porcentaje' => $porcentaje,
-                'personal' => $personal
+        if (!$programaExistente) {
+            // Insertar el nuevo programa
+            $id_programa = DB::table('programas_predefinidos')->insertGetId([
+                'nombre' => $nombre,
+                'mensualidad' => $mensualidad,
+                'nivel' => $nivel,
+                'complex' => $complex,
+                'status' => $status,
+                'ocultar' => $ocultar
             ]);
+
+            // Insertar las clases asociadas al programa
+            foreach ($request->input('clases') as $index => $clase) {
+                $claseNombre = strtoupper($clase['clase']);
+                $maestro = $clase['maestro'];
+                $informacion = strtoupper($clase['informacion']);
+                $porcentaje = $clase['porcentaje'];
+                $personal = $clase['personal'] ?? '0'; // Valor por defecto '0'
+
+                DB::table('clases')->insert([
+                    'id_programa' => $id_programa,
+                    'nombre' => $claseNombre,
+                    'id_maestro' => $maestro,
+                    'informacion' => $informacion,
+                    'porcentaje' => $porcentaje,
+                    'personal' => $personal
+                ]);
+            }
+
+            return response()->json('Programa creado exitosamente', 200);
+        } else {
+            return response()->json('El programa de clases ' . $nombre . ' ya se encuentra registrado en el sistema', 400);
+        }
+    }
+    // lista de alumnos por clase
+    public function obtenerDatos($id_programa, $id_clase = null)
+    {
+        // Obtener los datos del programa
+        $programa = ProgramaPredefinido::where('id_programa', $id_programa)->first();
+
+        // Verificar si el programa existe
+        if (!$programa) {
+            return response()->json(['error' => 'Programa no encontrado'], 404);
         }
 
-        return response()->json('Programa creado exitosamente', 200);
-    } else {
-        return response()->json('El programa de clases ' . $nombre . ' ya se encuentra registrado en el sistema', 400);
-    }
-}
-// lista de alumnos por clase
-public function obtenerDatos($id_programa, $id_clase = null)
-{
-    // Obtener los datos del programa
-    $programa = ProgramaPredefinido::where('id_programa', $id_programa)->first();
+        // Inicializar las variables para almacenar las clases y los alumnos
+        $clasesList = [];
+        $alumnosList = [];
 
-    // Verificar si el programa existe
-    if (!$programa) {
-        return response()->json(['error' => 'Programa no encontrado'], 404);
-    }
+        // Si se proporciona el id_clase, buscar solo esa clase
+        if ($id_clase !== null) {
+            $clase = Clase::leftJoin('maestros', 'clases.id_maestro', '=', 'maestros.id_maestro')
+                ->select('clases.*', 'maestros.nombre_titular', 'maestros.nombre as nombre_maestro')
+                ->where('clases.id_programa', $id_programa)
+                ->where('clases.id_clase', $id_clase)
+                ->orderBy('clases.porcentaje', 'DESC')
+                ->first();
 
-    // Inicializar las variables para almacenar las clases y los alumnos
-    $clasesList = [];
-    $alumnosList = [];
+            if ($clase) {
+                $clasesList[] = $clase;
+            }
+        } else {
+            // Obtener todas las clases del programa
+            $clases = Clase::leftJoin('maestros', 'clases.id_maestro', '=', 'maestros.id_maestro')
+                ->select('clases.*', 'maestros.nombre_titular', 'maestros.nombre as nombre_maestro')
+                ->where('clases.id_programa', $id_programa)
+                ->orderBy('clases.porcentaje', 'DESC')
+                ->get();
 
-    // Si se proporciona el id_clase, buscar solo esa clase
-    if ($id_clase !== null) {
-        $clase = Clase::leftJoin('maestros', 'clases.id_maestro', '=', 'maestros.id_maestro')
-            ->select('clases.*', 'maestros.nombre_titular', 'maestros.nombre as nombre_maestro')
-            ->where('clases.id_programa', $id_programa)
-            ->where('clases.id_clase', $id_clase)
-            ->orderBy('clases.porcentaje', 'DESC')
-            ->first();
-
-        if ($clase) {
-            $clasesList[] = $clase;
+            $clasesList = $clases->toArray();
         }
-    } else {
-        // Obtener todas las clases del programa
-        $clases = Clase::leftJoin('maestros', 'clases.id_maestro', '=', 'maestros.id_maestro')
-            ->select('clases.*', 'maestros.nombre_titular', 'maestros.nombre as nombre_maestro')
-            ->where('clases.id_programa', $id_programa)
-            ->orderBy('clases.porcentaje', 'DESC')
-            ->get();
 
-        $clasesList = $clases->toArray();
-    }
+        // Si se proporciona el id_clase o si no hay clases disponibles, buscar los alumnos
+        if ($id_clase !== null || empty($clasesList)) {
+            $alumnos = RegistroPredefinido::where('id_programa', $id_programa)
+                ->orderBy('id_alumno')
+                ->get();
 
-    // Si se proporciona el id_clase o si no hay clases disponibles, buscar los alumnos
-    if ($id_clase !== null || empty($clasesList)) {
-        $alumnos = RegistroPredefinido::where('id_programa', $id_programa)
-            ->orderBy('id_alumno')
-            ->get();
+            foreach ($alumnos as $registro) {
+                $alumno = Alumno::where('id_alumno', $registro->id_alumno)->first();
 
-        foreach ($alumnos as $registro) {
-            $alumno = Alumno::where('id_alumno', $registro->id_alumno)->first();
-
-            if ($alumno) {
-                $alumnosList[] = [
-                    'id_alumno' => $alumno->id_alumno,
-                    'nombre' => $alumno->nombre,
-                    'celular' => $alumno->celular
-                ];
+                if ($alumno) {
+                    $alumnosList[] = [
+                        'id_alumno' => $alumno->id_alumno,
+                        'nombre' => $alumno->nombre,
+                        'celular' => $alumno->celular
+                    ];
+                }
             }
         }
+
+        $resultado = [
+            'id_programa' => $programa->id_programa,
+            'nombre_programa' => $programa->nombre,
+            'mensualidad' => $programa->mensualidad,
+            'clases' => $clasesList,
+            'alumnos' => $alumnosList
+        ];
+
+        return response()->json($resultado);
     }
-
-    $resultado = [
-        'id_programa' => $programa->id_programa,
-        'nombre_programa' => $programa->nombre,
-        'mensualidad' => $programa->mensualidad,
-        'clases' => $clasesList,
-        'alumnos' => $alumnosList
-    ];
-
-    return response()->json($resultado);
-}
-//actualizar
-public function update(Request $request, $id)
+    //actualizar
+    public function update(Request $request, $id)
     {
         $nombre = strtoupper($request->input('nombre'));
         $maestro = $request->input('maestro');
@@ -213,7 +215,7 @@ public function update(Request $request, $id)
             Clase::where('id_clase', $id)->update([
                 'nombre' => $nombre,
                 'id_maestro' => $maestro,
-                'informacion'=> $informacion,
+                'informacion' => $informacion,
 
             ]);
 
@@ -223,7 +225,7 @@ public function update(Request $request, $id)
         }
     }
 
-//Mostrar informacion del alumno para la beca
+    //Mostrar informacion del alumno para la beca
     public function mostrarInformacionAlumno(Request $request)
     {
         $id_alumno = $request->input('id_alumno');
@@ -289,7 +291,7 @@ public function update(Request $request, $id)
 
         return response()->json($data);
     }
-//Crea la Beca
+    //Crea la Beca
     public function actualizarBeca(Request $request)
     {
         $id_alumno = $request->input('id_alumno');
