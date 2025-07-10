@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\AlumnoController;
 use App\Http\Controllers\ClaseController;
 use App\Http\Controllers\MaestroController;
@@ -13,17 +13,25 @@ use App\Http\Controllers\DescuentosController;
 use App\Http\Controllers\CargosController;
 use App\Http\Controllers\ImprimirController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PagoController;
+use App\Http\Controllers\ProgramaPredefinidoController;
+use App\Http\Controllers\RecargoController;
+use App\Http\Controllers\MiscelaneaController;
+Route::get('miscelanea', [MiscelaneaController::class, 'index']);
 
 
-Route::middleware('api')->group(function () {
-    Route::get('usuarios', [UsuarioController::class, 'index']);
-    Route::get('usuarios/{id}', [UsuarioController::class, 'show']);
-    Route::post('usuarios', [UsuarioController::class, 'store']);
-    Route::put('usuarios/{id}', [UsuarioController::class, 'update']);
-    Route::delete('usuarios/{id}', [UsuarioController::class, 'destroy']);
-    Route::post('/agregar-recargos', [UsuarioController::class, 'agregarRecargos']);
-    Route::get('/lista-usuarios', [UsuarioController::class, 'listaUsuarios']);
-});
+/*Route::middleware('api')->group(function () {
+    Route::get('user', [UserController::class, 'index']);
+    Route::get('user/{id}', [UserController::class, 'show']);
+    Route::post('user', [UserController::class, 'store']);
+    Route::put('user/{id}', [UserController::class, 'update']);
+    Route::delete('user/{id}', [UserController::class, 'destroy']);
+    Route::post('/agregar-recargos', [UserController::class, 'agregarRecargos']);
+    Route::get('/lista-user', [UserController::class, 'listaUser']);
+});*/
+// Ejemplo: GET /api/users/lista-usuarios
+Route::get('users/lista-usuarios', [UserController::class, 'listaUsuarios']);
+
 Route::middleware('api')->group(function () {
     Route::get('alumnos', [AlumnoController::class, 'index']);
     Route::get('alumnos/datos-combinados', [AlumnoController::class, 'mostrarDatosCombinados']);
@@ -36,14 +44,13 @@ Route::middleware('api')->group(function () {
     Route::put('/alumnos/{id}/alta', [AlumnoController::class, 'altaAlumno']);
     Route::get('/alumnos-combinados/pdf', [AlumnoController::class, 'PDFmostrarDatosCombinados']);
 
-  
 });
 
 Route::middleware('api')->group(function () {
-    Route::get('clases', [ClaseController::class, 'index']);
+    /*Route::get('clases', [ClaseController::class, 'index']);
     Route::get('clases/{id}', [ClaseController::class, 'show']);
     Route::put('clases/{id}', [ClaseController::class, 'update']);
-    Route::delete('clases/{id}', [ClaseController::class, 'destroy']);
+    Route::delete('clases/{id}', [ClaseController::class, 'destroy']);*/
     Route::post('/clases', [ClaseController::class, 'store']);
     Route::get('/alumnos-clases/{id_programa}/{id_clase?}', [ClaseController::class, 'obtenerDatos']);
     Route::post('/mostrar-informacion-alumno', [ClaseController::class, 'mostrarInformacionAlumno']);
@@ -78,7 +85,7 @@ Route::middleware('api')->group(function () {
     Route::put('adeudos-programas/{id}', [AdeudoProgramaController::class, 'update']);
     Route::delete('adeudos-programas/{id}', [AdeudoProgramaController::class, 'destroy']);
     Route::get('/adeudos-programas/alumno/{id_alumno}', [AdeudoProgramaController::class, 'filterByAlumno']);
-   
+
 });
 Route::middleware('api')->group(function () {
     Route::get('/cortes', [CorteController::class, 'index']);
@@ -93,7 +100,7 @@ Route::middleware('api')->group(function () {
 Route::middleware('api')->group(function () {
 Route::get('/adeudos/{id}', [ExpedienteAlumnoController::class, 'getAdeudosPorAlumno']);
 Route::get('/pagos/{id}', [ExpedienteAlumnoController::class, 'getPagosPorAlumno']);
-Route::get('/clases/{id}', [ExpedienteAlumnoController::class, 'getProgramasPorAlumno']);
+Route::get('/alumno-programas/{id_alumno}', [ExpedienteAlumnoController::class, 'getProgramasPorAlumno']);
 Route::get('/informacion', [ExpedienteAlumnoController::class, 'obtenerInformacionVisitas']);
 Route::get('/programas/{id}', [ExpedienteAlumnoController::class, 'obtenerProgramas']);
 Route::post('/inscripcion/{id}', [ExpedienteAlumnoController::class, 'registrarInscripcion']);
@@ -101,6 +108,15 @@ Route::post('/registrar-recargo/{id}', [ExpedienteAlumnoController::class, 'regi
 Route::post('/registrar-visita/{id_alumno}/{id_clase}', [ExpedienteAlumnoController::class, 'registrarVisita']);
 Route::post('/registrar-programa', [ExpedienteAlumnoController::class, 'agregarPrograma']);
 Route::post('/procesar-pagos', [ExpedienteAlumnoController::class, 'accionPago']);
+});
+
+Route::middleware('api')->group(function () {
+    /*Route::get('/pagos', [PagoController::class, 'index']);
+    Route::post('/pagos', [PagoController::class, 'store']);
+    Route::get('/pagos/{id}', [PagoController::class, 'show']);
+    Route::delete('/pagos/{id}', [PagoController::class, 'destroy']);*/
+    Route::apiResource('pagos', PagoController::class);
+    Route::get('/pagos/{id}/recibo', [PagoController::class, 'generarReciboPDF']);
 });
 
 Route::middleware('api')->group(function () {
@@ -124,3 +140,11 @@ Route::post('/deudores', [ImprimirController::class, 'consultarDeudores']);
 Route::middleware('api')->group(function () {
 Route::post('/login', [AuthController::class, 'login']);
 });
+
+Route::apiResource('clases', ClaseController::class);
+Route::apiResource('maestros', MaestroController::class);
+Route::apiResource('programas-predefinidos', ProgramaPredefinidoController::class);
+Route::post('/recargos', [RecargoController::class, 'agregarRecargos']);
+Route::apiResource('users', UserController::class);
+Route::apiResource('miscelanea', MiscelaneaController::class);
+
