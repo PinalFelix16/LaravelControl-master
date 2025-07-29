@@ -20,15 +20,6 @@ use App\Http\Controllers\MiscelaneaController;
 Route::get('miscelanea', [MiscelaneaController::class, 'index']);
 
 
-/*Route::middleware('api')->group(function () {
-    Route::get('user', [UserController::class, 'index']);
-    Route::get('user/{id}', [UserController::class, 'show']);
-    Route::post('user', [UserController::class, 'store']);
-    Route::put('user/{id}', [UserController::class, 'update']);
-    Route::delete('user/{id}', [UserController::class, 'destroy']);
-    Route::post('/agregar-recargos', [UserController::class, 'agregarRecargos']);
-    Route::get('/lista-user', [UserController::class, 'listaUser']);
-});*/
 // Ejemplo: GET /api/users/lista-usuarios
 Route::get('users/lista-usuarios', [UserController::class, 'listaUsuarios']);
 

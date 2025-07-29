@@ -3,46 +3,41 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    /**
+     * Maneja el inicio de sesión permitiendo usar email o username
+     */
     public function login(Request $request)
     {
-        // Validar los datos recibidos
         $request->validate([
-            'usuario' => 'required|string',
+            'email' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        // Obtener las credenciales del request
-        $usuario = $request->input('usuario');
-        $password = md5($request->input('password'));
-
-        // Buscar el usuario en la base de datos
-        $user = DB::table('usuarios')
-                    ->where('usuario', $usuario)
-                    ->where('password', $password)
-                    ->first();
-
-        // Si el usuario existe
-        if ($user) {
-            // Generar un token de autenticación (ej. JWT, Laravel Passport)
-            // Para este ejemplo, simplemente devolveremos el ID del usuario
-            // pero en una aplicación real, deberías devolver un token JWT
-            return response()->json([
-                'success' => true,
-                'user_id' => $user->id,
-                'message' => 'Login exitoso',
-                'user_type' => $user->permisos
-            ]);
+        // Intentar primero con email
+        $credentials = ['email' => $request->email, 'password' => $request->password];
+        if (!Auth::attempt($credentials)) {
+            // Si falla, intentar con name
+            $credentials = ['name' => $request->email, 'password' => $request->password];
+            if (!Auth::attempt($credentials)) {
+                return response()->json(['success' => false, 'message' => 'Credenciales incorrectas'], 401);
+            }
         }
 
-        // Si no se encuentra el usuario o la contraseña no coincide
+        $user = Auth::user();
+
         return response()->json([
-            'success' => false,
-            'message' => 'Credenciales incorrectas',
-        ], 401);
+            'success' => true,
+            'message' => 'Login correcto',
+            'user_id' => $user->id,
+            'user_type' => $user->rol ?? 'user',
+            'name' => $user->name ?? $user->email,
+            'rol' => $user->rol ?? 'N/A'
+        ]);
     }
 }
