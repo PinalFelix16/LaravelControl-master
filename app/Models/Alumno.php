@@ -9,13 +9,23 @@ class Alumno extends Model
 {
     use HasFactory;
 
+    protected $table = 'alumnos';
+    protected $primaryKey = 'id_alumno';
+    public $incrementing = true;
+    protected $keyType = 'int';
+
+
     protected $fillable = [
         'nombre',
-        'apellido',
-        'correo',
+        'fecha_nac',
+        'celular',
+        'tutor',
+        'tutor_2',
         'telefono',
-        'fecha_nacimiento',
-        'status', // importante incluirlo ahora que existe
+        'telefono_2',
+        'hist_medico',
+        'status',
+        'beca'
     ];
 
     // Relación: un alumno puede tener muchas clases
@@ -24,3 +34,4 @@ class Alumno extends Model
         return $this->hasMany(\App\Models\Clase::class, 'alumno_id', 'id');
     }
 }
+

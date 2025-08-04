@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AdeudoSecundario extends Model
+class PagoSecundario extends Model
 {
     use HasFactory;
 
-    protected $table = 'adeudos_secundarios';
+    protected $table = 'pagos_secundarios';
 
     protected $fillable = [
         'id_alumno',
@@ -17,10 +17,13 @@ class AdeudoSecundario extends Model
         'periodo',
         'monto',
         'descuento',
+        'fecha_pago',
+        'nomina',
+        'recibo',
         'corte',
     ];
 
-    // Relaciones (opcional, ajústalas si tus modelos existen)
+    // Relaciones Eloquent (ajusta si tienes modelos y claves foráneas)
     public function alumno()
     {
         return $this->belongsTo(Alumno::class, 'id_alumno', 'id');

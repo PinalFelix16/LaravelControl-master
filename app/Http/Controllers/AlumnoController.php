@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator; // ← ¡AGREGA ESTA LÍNEA!
 use App\Models\Alumno;
 
 class AlumnoController extends Controller
@@ -12,6 +13,7 @@ class AlumnoController extends Controller
      */
     public function index(Request $request)
     {
+
         $status = $request->query('status'); // puede ser 'activo' o 'inactivo'
 
         $alumnos = Alumno::query()
@@ -24,6 +26,7 @@ class AlumnoController extends Controller
     /**
      * Mostrar un alumno individual (expediente)
      */
+
     public function show($id)
     {
         $alumno = Alumno::with('clases')->find($id);
@@ -43,134 +46,98 @@ class AlumnoController extends Controller
         ]);
     }
 
-    /**
-     * Registrar un nuevo alumno
-     */
+
+    public function destroy($id)
+    {
+        Alumno::destroy($id);
+        return response()->json(null, 204);
+    }
+
+    public function mostrarDatosCombinados(Request $request)
+    {
+        $status = $request->query('status', 1);
+
+        // Ejemplo: traer alumnos con sus clases y adeudos
+        $alumnos = Alumno::with(['clases', 'adeudos'])
+            ->where('estatus', $status ? 'activo' : 'inactivo')
+            ->get();
+
+        return response()->json($alumnos);
+    }
+
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
-            'correo' => 'nullable|email',
-            'telefono' => 'nullable|string|max:20',
-            'fecha_nacimiento' => 'nullable|date',
+        $validator = Validator::make($request->all(), [
+            'nombre'        => 'required|string|max:100',
+            'fecha_nac'     => 'nullable|date',
+            'celular'       => 'nullable|string|max:20',
+            'tutor'         => 'nullable|string|max:100',
+            'tutor_2'       => 'nullable|string|max:100',
+            'telefono'      => 'nullable|string|max:20',
+            'telefono_2'    => 'nullable|string|max:20',
+            'hist_medico'   => 'nullable|string|max:255',
+            'status'        => 'required|string|max:20',
+            'beca'          => 'nullable|string|max:50',
+        ], [
+            'nombre.required'      => 'El nombre del alumno es obligatorio.',
+            'status.required'      => 'El status es obligatorio.',
+            'fecha_nac.date'       => 'La fecha de nacimiento debe tener formato válido.',
         ]);
 
-        $alumno = Alumno::create([
-            'nombre' => $request->nombre,
-            'apellido' => $request->apellido,
-            'correo' => $request->correo,
-            'telefono' => $request->telefono,
-            'fecha_nacimiento' => $request->fecha_nacimiento,
-            'status' => 'activo',
-        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+                'message' => 'Hay errores en los datos enviados.',
+            ], 422);
+        }
+
+        $alumno = Alumno::create($validator->validated());
 
         return response()->json([
-            'success' => true,
-            'message' => 'Alumno registrado correctamente',
-            'alumno' => $alumno
+            'data' => $alumno,
+            'message' => 'Alumno registrado correctamente.'
         ], 201);
     }
 
-    /**
-     * Actualizar un alumno
-     */
     public function update(Request $request, $id)
     {
         $alumno = Alumno::find($id);
 
         if (!$alumno) {
-            return response()->json(['error' => 'Alumno no encontrado'], 404);
+            return response()->json([
+                'message' => 'Alumno no encontrado.'
+            ], 404);
         }
 
-        $alumno->update($request->only([
-            'nombre',
-            'apellido',
-            'correo',
-            'telefono',
-            'fecha_nacimiento',
-            'status'
-        ]));
+        $validator = Validator::make($request->all(), [
+            'nombre'        => 'sometimes|required|string|max:100',
+            'fecha_nac'     => 'nullable|date',
+            'celular'       => 'nullable|string|max:20',
+            'tutor'         => 'nullable|string|max:100',
+            'tutor_2'       => 'nullable|string|max:100',
+            'telefono'      => 'nullable|string|max:20',
+            'telefono_2'    => 'nullable|string|max:20',
+            'hist_medico'   => 'nullable|string|max:255',
+            'status'        => 'sometimes|required|string|max:20',
+            'beca'          => 'nullable|string|max:50',
+        ], [
+            'nombre.required'      => 'El nombre del alumno es obligatorio.',
+            'status.required'      => 'El status es obligatorio.',
+            'fecha_nac.date'       => 'La fecha de nacimiento debe tener formato válido.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+                'message' => 'Hay errores en los datos enviados.'
+            ], 422);
+        }
+
+        $alumno->update($validator->validated());
 
         return response()->json([
-            'success' => true,
-            'message' => 'Alumno actualizado correctamente',
-            'alumno' => $alumno
+            'data' => $alumno,
+            'message' => 'Alumno actualizado correctamente.'
         ]);
     }
-
-    /**
-     * Dar de baja (baja lógica cambiando status)
-     */
-
-public function bajaAlumno($id)
-{
-    $alumno = Alumno::find($id);
-
-    if (!$alumno) {
-        return response()->json(['error' => 'Alumno no encontrado'], 404);
-    }
-
-    $alumno->update(['status' => 'inactivo']);
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Alumno dado de baja correctamente',
-        'alumno' => $alumno
-    ]);
-}
-
-// Dar de alta
-public function altaAlumno($id)
-{
-    $alumno = Alumno::find($id);
-
-    if (!$alumno) {
-        return response()->json(['error' => 'Alumno no encontrado'], 404);
-    }
-
-    $alumno->update(['status' => 'activo']);
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Alumno dado de alta correctamente',
-        'alumno' => $alumno
-    ]);
-}
-
-
-    /**
-     * Endpoint para la tabla de tu frontend
-     */
-   public function datosCombinados(Request $request)
-{
-    // 1. Recibe el parámetro status
-    $statusParam = strtolower($request->query('status', 'activo'));
-
-    // 2. Convertimos numérico a texto
-    if ($statusParam === '1') $statusParam = 'activo';
-    if ($statusParam === '0') $statusParam = 'inactivo';
-
-    // 3. Validamos que solo acepte estos dos valores
-    if (!in_array($statusParam, ['activo', 'inactivo'])) {
-        return response()->json(['error' => 'Estado inválido'], 400);
-    }
-
-    // 4. Consulta con relación clases
-    $alumnos = \App\Models\Alumno::with('clases')
-        ->where('status', $statusParam)
-        ->get()
-        ->map(function ($alumno) {
-            return [
-                'id' => $alumno->id,
-                'nombre' => $alumno->nombre . ' ' . $alumno->apellido,
-                'telefono' => $alumno->telefono ?? '-',
-                'clases' => $alumno->clases->pluck('nombre_clase')->join(', ') ?: '-',
-            ];
-        });
-
-    return response()->json($alumnos);
-}
-
-
 }

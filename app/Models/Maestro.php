@@ -10,7 +10,9 @@ class Maestro extends Model
     use HasFactory;
 
     protected $table = 'maestros';
-    protected $primaryKey = 'id_maestro';
+    protected $primaryKey = 'id_maestro';  // <--- Importante
+    public $incrementing = true;           // <--- Importante
+    public $timestamps = false;
 
     protected $fillable = [
         'nombre',

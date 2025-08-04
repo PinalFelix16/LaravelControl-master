@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AdeudoFragmentado extends Model
+class PagoFragmentado extends Model
 {
     use HasFactory;
 
-    protected $table = 'adeudos_fragmentados';
+    protected $table = 'pagos_fragmentados';
 
     protected $fillable = [
         'id_alumno',
@@ -18,9 +18,10 @@ class AdeudoFragmentado extends Model
         'periodo',
         'id_maestro',
         'monto',
+        'nomina',
     ];
 
-    // Relaciones (opcional, ajústalas a tus modelos existentes)
+    // Relaciones (ajusta si tus modelos existen y los nombres de clave foránea)
     public function alumno()
     {
         return $this->belongsTo(Alumno::class, 'id_alumno', 'id');
