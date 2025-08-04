@@ -14,6 +14,13 @@ class Alumno extends Model
         'apellido',
         'correo',
         'telefono',
-        'fecha_nacimiento'
+        'fecha_nacimiento',
+        'status', // importante incluirlo ahora que existe
     ];
+
+    // Relación: un alumno puede tener muchas clases
+    public function clases()
+    {
+        return $this->hasMany(\App\Models\Clase::class, 'alumno_id', 'id');
+    }
 }
