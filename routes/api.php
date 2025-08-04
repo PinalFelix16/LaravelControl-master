@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
 use Illuminate\Http\Request;
 
 
@@ -51,6 +50,12 @@ Route::get('pagos/{id}/imprimir', [App\Http\Controllers\PagoController::class, '
 Route::apiResource('miscelanea', App\Http\Controllers\MiscelaneaController::class);
 
 // Elimina/comenta cualquier cierre de llave '})' suelta que no tenga apertura de grupo arriba.
+
+
+# Route::get('/user', function (Request $request) {
+#     return $request->user();
+# })->middleware('auth:sanctum');
+
 
 # Route::get('/user', function (Request $request) {
 #     return $request->user();

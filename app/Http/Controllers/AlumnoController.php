@@ -23,10 +23,6 @@ class AlumnoController extends Controller
         return response()->json($alumnos);
     }
 
-    /**
-     * Mostrar un alumno individual (expediente)
-     */
-
     public function show($id)
     {
         $alumno = Alumno::with('clases')->find($id);
@@ -45,7 +41,6 @@ class AlumnoController extends Controller
             'clases' => $alumno->clases->pluck('nombre_clase')->toArray() ?? [],
         ]);
     }
-
 
     public function destroy($id)
     {
