@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -11,7 +11,7 @@ class UserController extends Controller
     // Mostrar todos los usuarios
     public function index()
     {
-        return User::all();
+        
     }
 
     // Mostrar un usuario específico

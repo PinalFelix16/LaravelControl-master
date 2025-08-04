@@ -10,19 +10,21 @@ class Clase extends Model
     use HasFactory;
 
     protected $table = 'clases';
+    protected $primaryKey = 'id_clase'; // Clave primaria según tu base
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
+        'id_programa',
         'alumno_id',
-        'nombre_clase',
-        'nivel',
-        'grupo',
-        'turno',
-        'costo',
-        'estatus'
+        'nombre',
+        'id_maestro',
+        'informacion',
+        'porcentaje',
+        'personal'
     ];
 
-    public function alumno()
-    {
-        return $this->belongsTo(Alumno::class, 'alumno_id');
-    }
+    public $timestamps = false; // Si NO tienes created_at y updated_at en tu tabla
+
+    // Si tienes timestamps, ponlo en true y revisa tu migración
 }

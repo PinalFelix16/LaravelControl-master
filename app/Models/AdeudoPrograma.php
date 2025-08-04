@@ -9,14 +9,7 @@ class AdeudoPrograma extends Model
 {
     use HasFactory;
 
-    protected $table = 'adeudos';
-    protected $primaryKey = 'id_alumno'; // Ajusta esto según la clave primaria de tu tabla
-    public $timestamps = false; // Indica a Laravel que no maneje timestamps automáticamente
-      // Indica que la clave primaria no es un entero autoincremental
-      public $incrementing = false;
-
-      // Indica que la clave primaria es de tipo string
-      protected $keyType = 'string';
+    protected $table = 'adeudos_programas';
 
     protected $fillable = [
         'id_alumno',
@@ -26,17 +19,16 @@ class AdeudoPrograma extends Model
         'monto',
         'beca',
         'descuento',
-        'fecha_limite'
+        'fecha_limite',
     ];
 
+    // Relaciones (ajusta si tienes modelos para alumno y programa)
     public function alumno()
     {
-        return $this->belongsTo(Alumno::class, 'id_alumno', 'id_alumno');
+        return $this->belongsTo(Alumno::class, 'id_alumno', 'id');
     }
-
     public function programa()
     {
-        return $this->belongsTo(ProgramaPredefinido::class, 'id_programa', 'id_programa');
+        return $this->belongsTo(ProgramaPredefinido::class, 'id_programa', 'id');
     }
 }
-

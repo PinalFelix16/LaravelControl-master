@@ -9,11 +9,23 @@ class Alumno extends Model
 {
     use HasFactory;
 
+    protected $table = 'alumnos';
+    protected $primaryKey = 'id_alumno';
+    public $incrementing = true;
+    protected $keyType = 'int';
+
+
     protected $fillable = [
         'nombre',
-        'apellido',
-        'correo',
+        'fecha_nac',
+        'celular',
+        'tutor',
+        'tutor_2',
         'telefono',
-        'fecha_nacimiento'
+        'telefono_2',
+        'hist_medico',
+        'status',
+        'beca'
     ];
 }
+

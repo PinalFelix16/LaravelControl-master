@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 
 class MaestroController extends Controller
 {
+
+    public $timestamps = false;
     // Listar todos los maestros
     public function index()
     {
@@ -23,7 +25,7 @@ class MaestroController extends Controller
             'fecha_nac' => 'nullable|date',
             'rfc' => 'nullable|string|max:20',
             'celular' => 'nullable|string|max:20',
-            'status' => 'nullable|string'
+            'status' => 'required|integer|in:0,1'
         ]);
 
         $maestro = Maestro::create($request->all());
@@ -40,15 +42,31 @@ class MaestroController extends Controller
     // Actualizar un maestro
     public function update(Request $request, $id)
     {
-        $maestro = Maestro::findOrFail($id);
-        $maestro->update($request->all());
-        return response()->json($maestro);
+    $maestro = Maestro::findOrFail($id);
+
+    $request->validate([
+        'nombre' => 'sometimes|required|string|max:255',
+        'nombre_titular' => 'nullable|string|max:255',
+        'direccion' => 'nullable|string',
+        'fecha_nac' => 'nullable|date',
+        'rfc' => 'nullable|string|max:20',
+        'celular' => 'nullable|string|max:20',
+        'status' => 'sometimes|required|integer|in:0,1'
+    ]);
+
+    $maestro->update($request->all());
+    return response()->json($maestro);
     }
 
     // Eliminar un maestro
     public function destroy($id)
     {
-        Maestro::destroy($id);
-        return response()->json(null, 204);
+    $maestro = Maestro::find($id);
+    if (!$maestro) {
+        return response()->json(['message' => 'Maestro no encontrado.'], 404);
     }
+    $maestro->delete();
+    return response()->json(null, 204);
+    }
+
 }
