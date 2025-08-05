@@ -60,12 +60,27 @@ class PagoProgramaController extends Controller
     }
 
     // Actualizar un pago de programa
-    public function update(Request $request, $id)
-    {
-        $pago = PagoPrograma::findOrFail($id);
-        $pago->update($request->all());
-        return response()->json($pago, 200);
-    }
+    // Actualizar un pago de programa
+public function update(Request $request, $id)
+{
+    $pago = PagoPrograma::findOrFail($id);
+    $validated = $request->validate([
+        'id_alumno' => 'sometimes|required',
+        'id_programa' => 'sometimes|required',
+        'periodo' => 'sometimes|required',
+        'concepto' => 'sometimes|required',
+        'monto' => 'sometimes|required|numeric',
+        'descuento' => 'nullable|numeric',
+        'beca' => 'nullable|numeric',
+        'fecha_limite' => 'nullable|date',
+        'fecha_pago' => 'nullable|date',
+        'recibo' => 'nullable|string',
+        'corte' => 'nullable|string',
+    ]);
+    $pago->update($validated);
+    return response()->json($pago, 200);
+}
+
 
     // Eliminar un pago de programa
     public function destroy($id)

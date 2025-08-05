@@ -32,12 +32,21 @@ class AdeudoSecundarioController extends Controller
         return AdeudoSecundario::findOrFail($id);
     }
 
-    public function update(Request $request, $id)
-    {
-        $adeudo = AdeudoSecundario::findOrFail($id);
-        $adeudo->update($request->all());
-        return response()->json($adeudo, 200);
-    }
+public function update(Request $request, $id)
+{
+    $adeudo = AdeudoSecundario::findOrFail($id);
+    $validated = $request->validate([
+        'id_alumno'  => 'sometimes|required',
+        'concepto'   => 'sometimes|required|string',
+        'periodo'    => 'sometimes|required',
+        'monto'      => 'sometimes|required|numeric',
+        'descuento'  => 'nullable|numeric',
+        'corte'      => 'nullable|string',
+    ]);
+    $adeudo->update($validated);
+    return response()->json($adeudo, 200);
+}
+
 
     public function destroy($id)
     {

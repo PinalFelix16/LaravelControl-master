@@ -39,12 +39,25 @@ class PagoSecundarioController extends Controller
     }
 
     // Actualizar
-    public function update(Request $request, $id)
-    {
-        $pago = PagoSecundario::findOrFail($id);
-        $pago->update($request->all());
-        return response()->json($pago, 200);
-    }
+// Actualizar
+public function update(Request $request, $id)
+{
+    $pago = PagoSecundario::findOrFail($id);
+    $validated = $request->validate([
+        'id_alumno'  => 'sometimes|required',
+        'concepto'   => 'sometimes|required|string',
+        'periodo'    => 'sometimes|required',
+        'monto'      => 'sometimes|required|numeric',
+        'descuento'  => 'nullable|numeric',
+        'fecha_pago' => 'nullable|date',
+        'nomina'     => 'nullable|string',
+        'recibo'     => 'nullable|string',
+        'corte'      => 'nullable|string',
+    ]);
+    $pago->update($validated);
+    return response()->json($pago, 200);
+}
+
 
     // Eliminar
     public function destroy($id)

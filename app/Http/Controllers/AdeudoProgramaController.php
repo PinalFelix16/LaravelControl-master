@@ -71,12 +71,23 @@ class AdeudoProgramaController extends Controller
     }
 
     // Actualizar
-    public function update(Request $request, $id)
-    {
-        $adeudo = AdeudoPrograma::findOrFail($id);
-        $adeudo->update($request->all());
-        return response()->json($adeudo, 200);
-    }
+public function update(Request $request, $id)
+{
+    $adeudo = AdeudoPrograma::findOrFail($id);
+    $validated = $request->validate([
+        'id_alumno'   => 'sometimes|required',
+        'id_programa' => 'sometimes|required',
+        'periodo'     => 'sometimes|required',
+        'concepto'    => 'sometimes|required|string',
+        'monto'       => 'sometimes|required|numeric',
+        'beca'        => 'nullable|numeric',
+        'descuento'   => 'nullable|numeric',
+        'fecha_limite'=> 'sometimes|required|date',
+    ]);
+    $adeudo->update($validated);
+    return response()->json($adeudo, 200);
+}
+
 
     // Eliminar
     public function destroy($id)

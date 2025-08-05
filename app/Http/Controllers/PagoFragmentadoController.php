@@ -37,12 +37,23 @@ class PagoFragmentadoController extends Controller
     }
 
     // Actualizar
-    public function update(Request $request, $id)
-    {
-        $pago = PagoFragmentado::findOrFail($id);
-        $pago->update($request->all());
-        return response()->json($pago, 200);
-    }
+// Actualizar
+public function update(Request $request, $id)
+{
+    $pago = PagoFragmentado::findOrFail($id);
+    $validated = $request->validate([
+        'id_alumno'   => 'sometimes|required',
+        'id_programa' => 'sometimes|required',
+        'id_clase'    => 'sometimes|required',
+        'periodo'     => 'sometimes|required',
+        'id_maestro'  => 'sometimes|required',
+        'monto'       => 'sometimes|required|numeric',
+        'nomina'      => 'nullable|string',
+    ]);
+    $pago->update($validated);
+    return response()->json($pago, 200);
+}
+
 
     // Eliminar
     public function destroy($id)

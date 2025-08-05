@@ -28,8 +28,12 @@ Route::get('/adeudos/exportar-pdf', [App\Http\Controllers\AdeudoProgramaControll
 Route::post('login', [App\Http\Controllers\AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->post('/usuarios', [App\Http\Controllers\UsuarioController::class, 'store']);
-
-
+Route::middleware('auth:sanctum')->apiResource('usuarios', App\Http\Controllers\UsuarioController::class);
+Route::middleware('auth:sanctum')->put('/usuarios/{id}', [App\Http\Controllers\UsuarioController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/usuarios/{id}', [App\Http\Controllers\UsuarioController::class, 'destroy']);
+Route::middleware('auth:sanctum')->get('/usuarios', [App\Http\Controllers\UsuarioController::class, 'index']); // Para listar usuarios
+Route::apiResource('pagos', App\Http\Controllers\PagoController::class);
+Route::get('pagos/{id}/recibo-pdf', [App\Http\Controllers\PagoController::class, 'generarReciboPDF']);
 
 // ... otras rutas públicas (login, registro, etc.)
 Route::middleware('auth:sanctum')->group(function () {

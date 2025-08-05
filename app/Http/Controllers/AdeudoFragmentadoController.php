@@ -32,12 +32,21 @@ class AdeudoFragmentadoController extends Controller
         return AdeudoFragmentado::findOrFail($id);
     }
 
-    public function update(Request $request, $id)
-    {
-        $adeudo = AdeudoFragmentado::findOrFail($id);
-        $adeudo->update($request->all());
-        return response()->json($adeudo, 200);
-    }
+public function update(Request $request, $id)
+{
+    $adeudo = AdeudoFragmentado::findOrFail($id);
+    $validated = $request->validate([
+        'id_alumno'   => 'sometimes|required',
+        'id_programa' => 'sometimes|required',
+        'id_clase'    => 'sometimes|required',
+        'periodo'     => 'sometimes|required',
+        'id_maestro'  => 'sometimes|required',
+        'monto'       => 'sometimes|required|numeric',
+    ]);
+    $adeudo->update($validated);
+    return response()->json($adeudo, 200);
+}
+
 
     public function destroy($id)
     {
