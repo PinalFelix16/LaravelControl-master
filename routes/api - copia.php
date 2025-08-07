@@ -21,7 +21,6 @@ use App\Http\Controllers\MiscelaneaController;
 
 
 
-
 Route::get('miscelanea', [MiscelaneaController::class, 'index']);
 
 
