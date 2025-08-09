@@ -24,6 +24,9 @@ Route::apiResource('adeudos-programas', App\Http\Controllers\AdeudoProgramaContr
 Route::apiResource('adeudos-fragmentados', App\Http\Controllers\AdeudoFragmentadoController::class);
 Route::apiResource('adeudos-secundarios', App\Http\Controllers\AdeudoSecundarioController::class);
 Route::apiResource('miscelanea', App\Http\Controllers\MiscelaneaController::class);
+Route::apiResource('nominas', App\Http\Controllers\NominaController::class);
+Route::get('nominas/{id}/informe/print', [App\Http\Controllers\NominaController::class, 'informeNominaPrint']);
+Route::get('nominas/{id}/informe/pdf',   [App\Http\Controllers\NominaController::class, 'informeNominaPdf']);
 
 // --- EXTRAS ---
 Route::get('alumnos/{id}/expediente', [App\Http\Controllers\AlumnoController::class, 'expediente']);
