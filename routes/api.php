@@ -14,9 +14,9 @@ Route::apiResource('clases', App\Http\Controllers\ClaseController::class);
 Route::apiResource('programas', App\Http\Controllers\ProgramaController::class);
 Route::apiResource('pagos', App\Http\Controllers\PagoController::class);
 Route::apiResource('usuarios', App\Http\Controllers\UsuarioController::class);
-Route::apiResource('becas', App\Http\Controllers\BecaController::class);
-Route::apiResource('descuentos', App\Http\Controllers\DescuentoController::class);
-Route::apiResource('roles', App\Http\Controllers\RolController::class);
+ Route::apiResource('becas', App\Http\Controllers\BecaController::class);
+ Route::apiResource('descuentos', App\Http\Controllers\DescuentoController::class);
+ Route::apiResource('roles', App\Http\Controllers\RolController::class);
 Route::apiResource('pagos-programas', App\Http\Controllers\PagoProgramaController::class);
 Route::apiResource('pagos-fragmentados', App\Http\Controllers\PagoFragmentadoController::class);
 Route::apiResource('pagos-secundarios', App\Http\Controllers\PagoSecundarioController::class);
@@ -24,9 +24,21 @@ Route::apiResource('adeudos-programas', App\Http\Controllers\AdeudoProgramaContr
 Route::apiResource('adeudos-fragmentados', App\Http\Controllers\AdeudoFragmentadoController::class);
 Route::apiResource('adeudos-secundarios', App\Http\Controllers\AdeudoSecundarioController::class);
 Route::apiResource('miscelanea', App\Http\Controllers\MiscelaneaController::class);
-Route::apiResource('nominas', App\Http\Controllers\NominaController::class);
+/*Route::apiResource('nominas', App\Http\Controllers\NominaController::class);
 Route::get('nominas/{id}/informe/print', [App\Http\Controllers\NominaController::class, 'informeNominaPrint']);
 Route::get('nominas/{id}/informe/pdf',   [App\Http\Controllers\NominaController::class, 'informeNominaPdf']);
+Route::get('nominas/{id}/informe', [App\Http\Controllers\NominaController::class, 'informeNomina']); // JSON*/
+Route::get('nominas/anios',            [App\Http\Controllers\NominaController::class, 'mostrarAnios']);
+Route::get('nominas/mostrar/{anio}',   [App\Http\Controllers\NominaController::class, 'mostrarNominas'])->whereNumber('anio');
+Route::post('nominas/generar',         [App\Http\Controllers\NominaController::class, 'generarNomina']);
+
+Route::get('nominas/{id}/informe',       [App\Http\Controllers\NominaController::class, 'informeNomina']);
+Route::get('nominas/{id}/informe/print', [App\Http\Controllers\NominaController::class, 'informeNominaPrint']);
+Route::get('nominas/{id}/informe/pdf',   [App\Http\Controllers\NominaController::class, 'informeNominaPdf']);
+
+Route::apiResource('nominas', App\Http\Controllers\NominaController::class);
+
+
 
 // --- EXTRAS ---
 Route::get('alumnos/{id}/expediente', [App\Http\Controllers\AlumnoController::class, 'expediente']);

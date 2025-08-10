@@ -329,44 +329,45 @@ class NominaController extends Controller
 
     // VISTA imprimible (web.php)
     public function informeNominaPrint($id)
-    {
-        $info = $this->buildInformeData($id);
-        return view('nominas.informe', $info);
-    }
+{
+    $info = $this->buildInformeData($id);
+    $info['isPdf'] = false; // vista web/imprimible
+    return view('nominas.informe', $info);
+}
 
     // PDF descargable (web.php)
-    public function informeNominaPdf($id)
-    {
-        $info = $this->buildInformeData($id);
-        $pdf  = Pdf::loadView('nominas.informe', $info)->setPaper('letter', 'portrait');
-        return $pdf->download('informe_nomina_'.$id.'.pdf');
-    }
+public function informeNominaPdf($id)
+{
+    $info = $this->buildInformeData($id);
+    $info['isPdf'] = true; // renderizando para PDF
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('nominas.informe', $info)
+            ->setPaper('letter', 'portrait');
+    return $pdf->download('informe_nomina_'.$id.'.pdf');
+}
+
 
     // -------------------------
     // Helper: arma la data única
     // -------------------------
-    private function buildInformeData($id_nomina)
+        private function buildInformeData($id_nomina)
     {
         $nominaInfo = DB::table('nominas')
             ->where('id_nomina', $id_nomina)
-            ->select('fecha', 'id_autor','clases','inscripciones','recargos','total','comisiones','total_neto')
+            ->select('fecha','id_autor','clases','inscripciones','recargos','total','comisiones','total_neto')
             ->first();
 
-        if (!$nominaInfo) {
-            abort(404, 'Nómina no encontrada');
-        }
+        if (!$nominaInfo) abort(404, 'Nómina no encontrada');
 
         $autor = DB::table('usuarios')->where('id', $nominaInfo->id_autor)->value('nombre');
 
+        // Fecha en ES
         $ano = date("Y", strtotime($nominaInfo->fecha));
         $mes = date("M", strtotime($nominaInfo->fecha));
         $dia = date("d", strtotime($nominaInfo->fecha));
-        $meses = [
-            'Jan'=>'ENERO','Feb'=>'FEBRERO','Mar'=>'MARZO','Apr'=>'ABRIL','May'=>'MAYO','Jun'=>'JUNIO',
-            'Jul'=>'JULIO','Aug'=>'AGOSTO','Sep'=>'SEPTIEMBRE','Oct'=>'OCTUBRE','Nov'=>'NOVIEMBRE','Dec'=>'DICIEMBRE'
-        ];
+        $meses = ['Jan'=>'ENERO','Feb'=>'FEBRERO','Mar'=>'MARZO','Apr'=>'ABRIL','May'=>'MAYO','Jun'=>'JUNIO','Jul'=>'JULIO','Aug'=>'AGOSTO','Sep'=>'SEPTIEMBRE','Oct'=>'OCTUBRE','Nov'=>'NOVIEMBRE','Dec'=>'DICIEMBRE'];
         $fechanomina = strtoupper($dia.' DE '.($meses[$mes] ?? $mes).' DEL '.$ano);
 
+        // Maestros que participaron en la nómina
         $maestros = DB::table('registro_nominas')
             ->where('id_nomina', $id_nomina)
             ->select('id_maestro')
@@ -375,13 +376,15 @@ class NominaController extends Controller
             ->get();
 
         $data = [];
+
         foreach ($maestros as $m) {
             $id_maestro = $m->id_maestro;
             $nombre_maestro = DB::table('maestros')->where('id_maestro', $id_maestro)->value('nombre');
 
             $registros = DB::table('registro_nominas')
-                ->where('id_maestro', $id_maestro)
                 ->where('id_nomina', $id_nomina)
+                ->where('id_maestro', $id_maestro)
+                ->orderBy('id_clase')
                 ->get();
 
             $clases = [];
@@ -389,14 +392,28 @@ class NominaController extends Controller
             $totalmaestro  = 0;
 
             foreach ($registros as $r) {
-                $nombre_clase = DB::table('clases')->where('id_clase', $r->id_clase)->value('nombre');
+                $clase = DB::table('clases')->where('id_clase', $r->id_clase)->first();
+                $nombre_clase   = $clase?->nombre ?? 'CLASE '.$r->id_clase;
+                $id_programa    = $clase?->id_programa;
+                $nombre_programa= DB::table('programas_predefinidos')->where('id_programa', $id_programa)->value('nombre');
+
+                // TRANS = conteo de pagos_fragmentados usados en esta nómina para esa clase/programa
+                $transacciones = DB::table('pagos_fragmentados')
+                    ->where('nomina', $id_nomina)
+                    ->where('id_clase', $r->id_clase)
+                    ->when($id_programa, fn($q)=>$q->where('id_programa', $id_programa))
+                    ->count();
+
+                $totalgenerado += (float)$r->total;
+                $totalmaestro  += (float)$r->comision;
+
                 $clases[] = [
-                    'nombre_clase' => $nombre_clase,
-                    'total'        => number_format($r->total, 2),
-                    'comision'     => number_format($r->comision, 2),
+                    'nombre_clase'    => $nombre_clase,
+                    'nombre_programa' => $nombre_programa,
+                    'transacciones'   => $transacciones,
+                    'total'           => number_format($r->total, 2),
+                    'comision'        => number_format($r->comision, 2),
                 ];
-                $totalgenerado += (float) $r->total;
-                $totalmaestro  += (float) $r->comision;
             }
 
             $data[] = [
@@ -419,9 +436,11 @@ class NominaController extends Controller
         return [
             'fechanomina' => $fechanomina,
             'autor'       => $autor,
+            'nombre'      => $autor,
             'folio'       => $id_nomina,
             'data'        => $data,
             'totals'      => $totals,
         ];
-    }
+}
+
 }
