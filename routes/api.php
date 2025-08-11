@@ -3,13 +3,29 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
-
-// AUTENTICACIÓN
+// ========================
+// 🔹 Autenticación
+// ========================
 Route::post('login', [App\Http\Controllers\AuthController::class, 'login']);
 Route::post('logout', [App\Http\Controllers\AuthController::class, 'logout']);
 
-// CRUD PRINCIPALES Y ACCIONES
-Route::apiResource('alumnos', App\Http\Controllers\AlumnoController::class);
+// ========================
+// 🔹 Rutas personalizadas de alumnos (ARRIBA del apiResource)
+// ========================
+Route::get('alumnos/datos-combinados', [App\Http\Controllers\AlumnoController::class, 'datosCombinados']);
+Route::get('alumnos/{id}/expediente', [App\Http\Controllers\AlumnoController::class, 'expediente'])->where('id', '[0-9]+');
+Route::put('alumnos/{id}/expediente', [App\Http\Controllers\AlumnoController::class, 'actualizarExpediente'])->where('id', '[0-9]+');
+Route::post('alumnos/{id}/beca', [App\Http\Controllers\AlumnoController::class, 'asignarBeca'])->where('id', '[0-9]+');
+Route::post('alumnos/{id}/descuento', [App\Http\Controllers\AlumnoController::class, 'asignarDescuento'])->where('id', '[0-9]+');
+
+// 🔹 Alta/Baja de alumnos
+Route::put('alumnos/{id}/baja', [App\Http\Controllers\AlumnoController::class, 'bajaAlumno'])->where('id', '[0-9]+');
+Route::put('alumnos/{id}/alta', [App\Http\Controllers\AlumnoController::class, 'altaAlumno'])->where('id', '[0-9]+');
+
+// ========================
+// 🔹 Recursos principales (CRUD RESTful)
+// ========================
+Route::apiResource('alumnos', App\Http\Controllers\AlumnoController::class)->where(['alumno' => '[0-9]+']);
 Route::apiResource('maestros', App\Http\Controllers\MaestroController::class);
 Route::apiResource('clases', App\Http\Controllers\ClaseController::class);
 Route::apiResource('programas', App\Http\Controllers\ProgramaController::class);
@@ -24,43 +40,25 @@ Route::apiResource('pagos-secundarios', App\Http\Controllers\PagoSecundarioContr
 Route::apiResource('adeudos-programas', App\Http\Controllers\AdeudoProgramaController::class);
 Route::apiResource('adeudos-fragmentados', App\Http\Controllers\AdeudoFragmentadoController::class);
 Route::apiResource('adeudos-secundarios', App\Http\Controllers\AdeudoSecundarioController::class);
-Route::get('/adeudos/exportar-pdf', [App\Http\Controllers\AdeudoProgramaController::class, 'exportarPDF']);
-Route::post('login', [App\Http\Controllers\AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
-Route::middleware('auth:sanctum')->post('/usuarios', [App\Http\Controllers\UsuarioController::class, 'store']);
-Route::middleware('auth:sanctum')->apiResource('usuarios', App\Http\Controllers\UsuarioController::class);
-Route::middleware('auth:sanctum')->put('/usuarios/{id}', [App\Http\Controllers\UsuarioController::class, 'update']);
-Route::middleware('auth:sanctum')->delete('/usuarios/{id}', [App\Http\Controllers\UsuarioController::class, 'destroy']);
-Route::middleware('auth:sanctum')->get('/usuarios', [App\Http\Controllers\UsuarioController::class, 'index']); // Para listar usuarios
-Route::apiResource('pagos', App\Http\Controllers\PagoController::class);
-Route::get('pagos/{id}/recibo-pdf', [App\Http\Controllers\PagoController::class, 'generarReciboPDF']);
-
-// ... otras rutas públicas (login, registro, etc.)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/adeudos/exportar-pdf', [App\Http\Controllers\AdeudoProgramaController::class, 'exportarPDF']);});
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/usuarios', [App\Http\Controllers\UsuarioController::class, 'index']);
-    Route::post('/usuarios', [App\Http\Controllers\UsuarioController::class, 'store']);
-});
-
-
-
-Route::get('alumnos/{id}/expediente', [App\Http\Controllers\AlumnoController::class, 'expediente']);
-Route::put('alumnos/{id}/expediente', [App\Http\Controllers\AlumnoController::class, 'actualizarExpediente']);
-Route::post('alumnos/{id}/beca', [App\Http\Controllers\AlumnoController::class, 'asignarBeca']);
-Route::post('alumnos/{id}/descuento', [App\Http\Controllers\AlumnoController::class, 'asignarDescuento']);
-Route::get('maestros/{id}/informe', [App\Http\Controllers\MaestroController::class, 'informe']);
-Route::get('pagos/{id}/imprimir', [App\Http\Controllers\PagoController::class, 'imprimirRecibo']);
 Route::apiResource('miscelanea', App\Http\Controllers\MiscelaneaController::class);
 
-// Elimina/comenta cualquier cierre de llave '})' suelta que no tenga apertura de grupo arriba.
+// ========================
+// 🔹 Rutas personalizadas de maestros/pagos
+// ========================
+Route::get('maestros/{id}/informe', [App\Http\Controllers\MaestroController::class, 'informe']);
+Route::get('pagos/{id}/imprimir', [App\Http\Controllers\PagoController::class, 'imprimirRecibo']);
+Route::get('pagos/{id}/recibo-pdf', [App\Http\Controllers\PagoController::class, 'generarReciboPDF']);
+Route::get('adeudos/exportar-pdf', [App\Http\Controllers\AdeudoProgramaController::class, 'exportarPDF']);
 
+// ========================
+// 🔹 Rutas protegidas con Sanctum
+// ========================
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
 
-# Route::get('/user', function (Request $request) {
-#     return $request->user();
-# })->middleware('auth:sanctum');
-
-
-# Route::get('/user', function (Request $request) {
-#     return $request->user();
-# })->middleware('auth:sanctum');
+    // Usuarios protegidos
+    Route::get('/usuarios', [App\Http\Controllers\UsuarioController::class, 'index']);
+    Route::post('/usuarios', [App\Http\Controllers\UsuarioController::class, 'store']);
+    Route::put('/usuarios/{id}', [App\Http\Controllers\UsuarioController::class, 'update']);
+    Route::delete('/usuarios/{id}', [App\Http\Controllers\UsuarioController::class, 'destroy']);
+});

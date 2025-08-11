@@ -9,22 +9,20 @@ class Clase extends Model
 {
     use HasFactory;
 
+    // 👇 Ajusta estos nombres si en tu BD son distintos
     protected $table = 'clases';
-    protected $primaryKey = 'id_clase'; // Clave primaria según tu base
-    public $incrementing = true;
-    protected $keyType = 'int';
+    protected $primaryKey = 'id_clase';
+    public $timestamps = true;
 
     protected $fillable = [
-        'id_programa',
+        // clave foránea que referencia a alumnos.id_alumno
         'alumno_id',
-        'nombre',
-        'id_maestro',
-        'informacion',
-        'porcentaje',
-        'personal'
+        // ... agrega aquí los demás campos de tu tabla clases ...
     ];
 
-    public $timestamps = false; // Si NO tienes created_at y updated_at en tu tabla
-
-    // Si tienes timestamps, ponlo en true y revisa tu migración
+    public function alumno()
+    {
+        // FK: clases.alumno_id  →  PK: alumnos.id_alumno
+        return $this->belongsTo(Alumno::class, 'alumno_id', 'id_alumno');
+    }
 }

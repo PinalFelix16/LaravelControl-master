@@ -2,137 +2,184 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator; // ← ¡AGREGA ESTA LÍNEA!
 use App\Models\Alumno;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class AlumnoController extends Controller
 {
     /**
-     * Listar alumnos (opcionalmente filtrando por status)
+     * GET /api/alumnos?status=0|1
+     * Lista alumnos (opcionalmente filtrados por status 0/1)
      */
     public function index(Request $request)
     {
+        $q = Alumno::query();
 
-        $status = $request->query('status'); // puede ser 'activo' o 'inactivo'
+        if ($request->has('status')) {
+            $s = (int) $request->query('status'); // fuerza 0/1
+            $q->where('status', $s);
+        }
 
-        $alumnos = Alumno::query()
-            ->when($status, fn($q) => $q->where('status', $status))
-            ->paginate(10);
-
-        return response()->json($alumnos);
+        return response()->json($q->orderBy('id_alumno', 'asc')->get());
     }
 
+    /**
+     * GET /api/alumnos/datos-combinados?status=0|1
+     * Devuelve alumnos + conteo de clases (clases_count)
+     * Requiere que el modelo Alumno tenga ->clases()
+     */
+   public function datosCombinados(Request $request)
+{
+    $q = \App\Models\Alumno::query()
+        ->select('alumnos.*')
+        ->withCount('clases');
+
+    if ($request->has('status')) {
+        $q->where('status', (int) $request->query('status')); // <-- FILTRO
+    }
+
+    return response()->json($q->orderBy('id_alumno', 'asc')->get());
+}
+
+    /**
+     * GET /api/alumnos/{id}
+     */
     public function show($id)
     {
-        $alumno = Alumno::with('clases')->find($id);
+        $alumno = Alumno::where('id_alumno', $id)->first();
+        if (!$alumno) {
+            return response()->json(['error' => 'Alumno no encontrado'], 404);
+        }
+        return response()->json($alumno);
+    }
 
+    /**
+     * POST /api/alumnos
+     */
+    public function store(Request $request)
+    {
+        $v = Validator::make($request->all(), [
+            'nombre'            => 'required|string|min:2',
+            'apellido'          => 'nullable|string',
+            'correo'            => 'nullable|email|unique:alumnos,correo',
+            'celular'           => 'nullable|string|max:50',
+            'telefono'          => 'nullable|string|max:50',
+            'fecha_nacimiento'  => 'nullable|date',
+            'tutor'             => 'nullable|string|max:255',
+            'tutor_2'           => 'nullable|string|max:255',
+            'telefono_2'        => 'nullable|string|max:50',
+            'hist_medico'       => 'nullable|string',
+            'beca'              => 'nullable|string|max:100',
+            'status'            => 'nullable|boolean', // 0/1
+        ]);
+
+        if ($v->fails()) {
+            return response()->json(['errors' => $v->errors()], 422);
+        }
+
+        $data = $v->validated();
+        if (!array_key_exists('status', $data)) {
+            $data['status'] = 1; // por defecto activo
+        }
+
+        $alumno = Alumno::create($data);
+        return response()->json($alumno, 201);
+    }
+
+    /**
+     * PUT /api/alumnos/{id}
+     */
+    public function update(Request $request, $id)
+    {
+        $alumno = Alumno::where('id_alumno', $id)->first();
         if (!$alumno) {
             return response()->json(['error' => 'Alumno no encontrado'], 404);
         }
 
-        return response()->json([
-            'id' => $alumno->id,
-            'nombre' => $alumno->nombre . ' ' . $alumno->apellido,
-            'correo' => $alumno->correo ?? '-',
-            'telefono' => $alumno->telefono ?? '-',
-            'fecha_nacimiento' => $alumno->fecha_nacimiento ?? '-',
-            'status' => $alumno->status ?? '-',
-            'clases' => $alumno->clases->pluck('nombre_clase')->toArray() ?? [],
+        $v = Validator::make($request->all(), [
+            'nombre'            => 'sometimes|required|string|min:2',
+            'apellido'          => 'nullable|string',
+            'correo'            => 'nullable|email|unique:alumnos,correo,' . $id . ',id_alumno',
+            'celular'           => 'nullable|string|max:50',
+            'telefono'          => 'nullable|string|max:50',
+            'fecha_nacimiento'  => 'nullable|date',
+            'tutor'             => 'nullable|string|max:255',
+            'tutor_2'           => 'nullable|string|max:255',
+            'telefono_2'        => 'nullable|string|max:50',
+            'hist_medico'       => 'nullable|string',
+            'beca'              => 'nullable|string|max:100',
+            'status'            => 'nullable|boolean', // 0/1
         ]);
+
+        if ($v->fails()) {
+            return response()->json(['errors' => $v->errors()], 422);
+        }
+
+        $alumno->update($v->validated());
+        return response()->json($alumno);
     }
 
+    /**
+     * DELETE /api/alumnos/{id}
+     */
     public function destroy($id)
     {
-        Alumno::destroy($id);
-        return response()->json(null, 204);
-    }
-
-    public function mostrarDatosCombinados(Request $request)
-    {
-        $status = $request->query('status', 1);
-
-        // Ejemplo: traer alumnos con sus clases y adeudos
-        $alumnos = Alumno::with(['clases', 'adeudos'])
-            ->where('estatus', $status ? 'activo' : 'inactivo')
-            ->get();
-
-        return response()->json($alumnos);
-    }
-
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'nombre'        => 'required|string|max:100',
-            'fecha_nac'     => 'nullable|date',
-            'celular'       => 'nullable|string|max:20',
-            'tutor'         => 'nullable|string|max:100',
-            'tutor_2'       => 'nullable|string|max:100',
-            'telefono'      => 'nullable|string|max:20',
-            'telefono_2'    => 'nullable|string|max:20',
-            'hist_medico'   => 'nullable|string|max:255',
-            'status'        => 'required|string|max:20',
-            'beca'          => 'nullable|string|max:50',
-        ], [
-            'nombre.required'      => 'El nombre del alumno es obligatorio.',
-            'status.required'      => 'El status es obligatorio.',
-            'fecha_nac.date'       => 'La fecha de nacimiento debe tener formato válido.',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors(),
-                'message' => 'Hay errores en los datos enviados.',
-            ], 422);
-        }
-
-        $alumno = Alumno::create($validator->validated());
-
-        return response()->json([
-            'data' => $alumno,
-            'message' => 'Alumno registrado correctamente.'
-        ], 201);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $alumno = Alumno::find($id);
-
+        $alumno = Alumno::where('id_alumno', $id)->first();
         if (!$alumno) {
-            return response()->json([
-                'message' => 'Alumno no encontrado.'
-            ], 404);
+            return response()->json(['error' => 'Alumno no encontrado'], 404);
         }
+        $alumno->delete();
+        return response()->json(['success' => true]);
+    }
 
-        $validator = Validator::make($request->all(), [
-            'nombre'        => 'sometimes|required|string|max:100',
-            'fecha_nac'     => 'nullable|date',
-            'celular'       => 'nullable|string|max:20',
-            'tutor'         => 'nullable|string|max:100',
-            'tutor_2'       => 'nullable|string|max:100',
-            'telefono'      => 'nullable|string|max:20',
-            'telefono_2'    => 'nullable|string|max:20',
-            'hist_medico'   => 'nullable|string|max:255',
-            'status'        => 'sometimes|required|string|max:20',
-            'beca'          => 'nullable|string|max:50',
-        ], [
-            'nombre.required'      => 'El nombre del alumno es obligatorio.',
-            'status.required'      => 'El status es obligatorio.',
-            'fecha_nac.date'       => 'La fecha de nacimiento debe tener formato válido.',
-        ]);
+    /**
+     * PUT /api/alumnos/{id}/alta   (ruta personalizada)
+     * Tus rutas usan altaAlumno/bajaAlumno, así que dejamos ambos nombres.
+     */
+    public function altaAlumno($id) { return $this->alta($id); }
+    public function bajaAlumno($id) { return $this->baja($id); }
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors(),
-                'message' => 'Hay errores en los datos enviados.'
-            ], 422);
-        }
+    // Implementación real de alta/baja
+    public function alta($id)
+    {
+        $alumno = Alumno::where('id_alumno', $id)->first();
+        if (!$alumno) return response()->json(['error' => 'Alumno no encontrado'], 404);
 
-        $alumno->update($validator->validated());
+        $alumno->update(['status' => 1]);
+        return response()->json(['success' => true, 'message' => 'Alumno dado de alta correctamente']);
+    }
 
-        return response()->json([
-            'data' => $alumno,
-            'message' => 'Alumno actualizado correctamente.'
-        ]);
+    public function baja($id)
+    {
+        $alumno = Alumno::where('id_alumno', $id)->first();
+        if (!$alumno) return response()->json(['error' => 'Alumno no encontrado'], 404);
+
+        $alumno->update(['status' => 0]);
+        return response()->json(['success' => true, 'message' => 'Alumno dado de baja correctamente']);
+    }
+
+    /**
+     * (Opcional) Si usas expediente y actualizaciones
+     * GET /api/alumnos/{id}/expediente
+     * PUT /api/alumnos/{id}/expediente
+     */
+    public function expediente($id)
+    {
+        $alumno = Alumno::where('id_alumno', $id)->first();
+        if (!$alumno) return response()->json(['error' => 'Alumno no encontrado'], 404);
+
+        // agrega aquí lo que necesites retornar (relaciones, etc.)
+        return response()->json($alumno);
+    }
+
+    public function actualizarExpediente(Request $request, $id)
+    {
+        $alumno = Alumno::where('id_alumno', $id)->first();
+        if (!$alumno) return response()->json(['error' => 'Alumno no encontrado'], 404);
+
+        $alumno->update($request->all());
+        return response()->json(['success' => true, 'message' => 'Expediente actualizado']);
     }
 }
