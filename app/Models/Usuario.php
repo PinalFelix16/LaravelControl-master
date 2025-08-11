@@ -9,6 +9,7 @@ use Laravel\Sanctum\HasApiTokens;
 class Usuario extends Authenticatable
 {
     use HasApiTokens, Notifiable;
+    public $timestamps = false;
 
     // Indica la tabla personalizada
     protected $table = 'usuarios';
