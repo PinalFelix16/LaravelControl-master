@@ -6,7 +6,8 @@ use App\Models\Alumno;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class AlumnoController extends Controller
+class AuthController extends Controller
+
 {
     /**
      * LISTAR ALUMNOS
