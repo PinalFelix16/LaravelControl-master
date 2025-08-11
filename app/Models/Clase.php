@@ -2,27 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Clase extends Model
 {
-    use HasFactory;
-
-    // 👇 Ajusta estos nombres si en tu BD son distintos
+    // ⬇️ Ajusta SOLO si tu tabla/PK son distintos
     protected $table = 'clases';
-    protected $primaryKey = 'id_clase';
-    public $timestamps = true;
+    protected $primaryKey = 'id_clase';   // <-- si tu PK es 'id', cámbialo a 'id'
+    public $incrementing = true;
+    protected $keyType = 'int';
+
+    // Si tu tabla NO tiene created_at/updated_at, deja false
+    public $timestamps = false;
 
     protected $fillable = [
-        // clave foránea que referencia a alumnos.id_alumno
-        'alumno_id',
-        // ... agrega aquí los demás campos de tu tabla clases ...
+        // agrega tus columnas cuando vayas a crear/editar
+        // 'alumno_id', 'maestro_id', 'materia', 'status', 'hora_inicio', 'hora_fin'
     ];
 
-    public function alumno()
-    {
-        // FK: clases.alumno_id  →  PK: alumnos.id_alumno
-        return $this->belongsTo(Alumno::class, 'alumno_id', 'id_alumno');
-    }
+    // Relaciones (descomenta/ajusta si las usas)
+    // public function alumno()
+    // {
+    //     return $this->belongsTo(\App\Models\Alumno::class, 'alumno_id', 'id_alumno');
+    // }
 }

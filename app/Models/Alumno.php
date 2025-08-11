@@ -13,7 +13,6 @@ class Alumno extends Model
     protected $primaryKey = 'id_alumno';
     public $incrementing = true;
     protected $keyType = 'int';
-    // public $timestamps = true; // Eloquent ya lo asume por defecto
 
     protected $fillable = [
         'nombre',
@@ -26,8 +25,8 @@ class Alumno extends Model
         'tutor_2',
         'hist_medico',
         'beca',
-        'fecha_nacimiento',   //  nombre correcto según tu BD
-        'status',             // 0/1 en tu BD
+        'fecha_nacimiento',
+        'status',
     ];
 
     protected $casts = [
@@ -37,10 +36,8 @@ class Alumno extends Model
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    // Relación: un alumno puede tener muchas clases
-    public function clases()
+   public function clases()
     {
-        // FK en clases = alumno_id ; PK local = id_alumno
         return $this->hasMany(\App\Models\Clase::class, 'alumno_id', 'id_alumno');
     }
 }
