@@ -31,7 +31,7 @@ Route::put('alumnos/{id}/expediente', [AlumnoController::class, 'actualizarExped
 // ...
 Route::get('pagos/{id_alumno}', [PagoController::class, 'byAlumno'])
     ->whereNumber('id_alumno');
- 
+
 // LISTAR
 Route::get('alumnos', [AlumnoController::class, 'index']);
 
@@ -40,7 +40,7 @@ Route::post('alumnos', [AlumnoController::class, 'store']);
 
 // EDITAR
 Route::put('alumnos/{id}',   [AlumnoController::class, 'update'])->whereNumber('id');
-Route::patch('alumnos/{id}', [AlumnoController::class, 'update'])->whereNumber('id');  
+Route::patch('alumnos/{id}', [AlumnoController::class, 'update'])->whereNumber('id');
 // ---------- CLASES ----------
 
 Route::middleware('auth:sanctum')->group(function () {
