@@ -30,6 +30,7 @@ class Alumno extends Model
     ];
 
     protected $casts = [
+        'fecha_nac' => 'date:Y-m-d',
         'status' => 'boolean',
         'fecha_nacimiento' => 'date:Y-m-d',
         'created_at' => 'datetime:Y-m-d H:i:s',

@@ -7,7 +7,6 @@ use App\Http\Controllers\AlumnoController;
 use App\Http\Controllers\ClaseController;
 use App\Http\Controllers\PagoController;
 
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -23,26 +22,30 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // ---------- ALUMNOS ----------
-Route::get('alumnos',                  [AlumnoController::class, 'index']);
-Route::get('alumnos/datos-combinados',[AlumnoController::class, 'datosCombinados']);
-Route::get('alumnos/{id}/expediente', [AlumnoController::class, 'expediente'])->whereNumber('id');
-Route::put('alumnos/{id}/expediente', [AlumnoController::class, 'actualizarExpediente'])->whereNumber('id');
 
-// ...
-Route::get('pagos/{id_alumno}', [PagoController::class, 'byAlumno'])
-    ->whereNumber('id_alumno');
- 
 // LISTAR
 Route::get('alumnos', [AlumnoController::class, 'index']);
 
-// CREAR   (resuelve tu 405 al guardar)
+// VER UNO
+Route::get('alumnos/{id}', [AlumnoController::class, 'show'])->whereNumber('id');
+
+// CREAR (guardar nuevo alumno)
 Route::post('alumnos', [AlumnoController::class, 'store']);
 
 // EDITAR
 Route::put('alumnos/{id}',   [AlumnoController::class, 'update'])->whereNumber('id');
 Route::patch('alumnos/{id}', [AlumnoController::class, 'update'])->whereNumber('id');  
-// ---------- CLASES ----------
 
+// EXTRAS DE ALUMNOS
+Route::get('alumnos/datos-combinados', [AlumnoController::class, 'datosCombinados']);
+Route::get('alumnos/{id}/expediente',  [AlumnoController::class, 'expediente'])->whereNumber('id');
+Route::put('alumnos/{id}/expediente',  [AlumnoController::class, 'actualizarExpediente'])->whereNumber('id');
+
+// ---------- PAGOS ----------
+Route::get('pagos/{id_alumno}', [PagoController::class, 'byAlumno'])
+    ->whereNumber('id_alumno');
+
+// ---------- CLASES ----------
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('clases',      [ClaseController::class, 'store']);
     Route::put('clases/{id}',  [ClaseController::class, 'update'])->whereNumber('id');
