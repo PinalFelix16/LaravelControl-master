@@ -45,6 +45,8 @@ Route::fallback(function () {
     return response()->json(['message' => 'Ruta no encontrada.'], 404);
 });
 
+// ---------- MAESTROS ----------
+Route::apiResource('maestros', App\Http\Controllers\MaestroController::class); // <-- PROTOCOLO ROJO: LÍNEA AÑADIDA
 
 //APIs adicionales
 Route::apiResource('programas', App\Http\Controllers\ProgramaController::class);
