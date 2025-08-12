@@ -81,7 +81,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('clases/{id}',            [ClaseController::class, 'update'])->whereNumber('id');
     Route::delete('clases/{id}',         [ClaseController::class, 'destroy'])->whereNumber('id');
 });
-
+Route::get('clases', [ClaseController::class, 'index']);   // LISTAR
+Route::get('clases/{id}', [ClaseController::class, 'show'])->whereNumber('id');
 // --- RUTA FAKE PARA EVITAR ERROR DE LOGIN EN SANCTUM ---
 Route::get('/login', function () {
     return response()->json(['error' => 'No autenticado'], 401);

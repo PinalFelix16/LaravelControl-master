@@ -54,15 +54,16 @@ class AlumnoController extends Controller
 
     /**
      * Normaliza entrada del front:
-     * - Acepta fecha_nacimiento y la mapea a fecha_nac
+     * - Acepta fecha_nac y la mapea a fecha_nacimiento
      * - Castea status a int 0/1
      * - Castea beca a float
      */
     private function normalize(array $data): array
     {
-        if (!isset($data['fecha_nac']) && isset($data['fecha_nacimiento'])) {
-            $data['fecha_nac'] = $data['fecha_nacimiento'];
-            unset($data['fecha_nacimiento']);
+        // Si el front manda 'fecha_nac', guardarla como 'fecha_nacimiento'
+        if (!isset($data['fecha_nacimiento']) && isset($data['fecha_nac'])) {
+            $data['fecha_nacimiento'] = $data['fecha_nac'];
+            unset($data['fecha_nac']);
         }
 
         if (isset($data['status'])) {
@@ -84,19 +85,18 @@ class AlumnoController extends Controller
         $input = $this->normalize($request->all());
 
         $v = Validator::make($input, [
-            'nombre'        => 'required|string|min:2',
-            'apellido'      => 'nullable|string',           // quita si tu tabla no lo tiene
-            'correo'        => 'nullable|email|unique:alumnos,correo',
-            'celular'       => 'nullable|string|max:50',
-            'telefono'      => 'nullable|string|max:50',
-            'fecha_nac'     => 'nullable|date',
-            'tutor'         => 'nullable|string|max:255',
-            'tutor_2'       => 'nullable|string|max:255',
-            'telefono_2'    => 'nullable|string|max:50',
-            'hist_medico'   => 'nullable|string',
-            'beca'          => 'nullable|numeric',
-            'status'        => 'nullable|in:0,1',
-            'observaciones' => 'nullable|string',
+            'nombre'            => 'required|string|min:2',
+            'apellido'          => 'nullable|string',
+            'correo'            => 'nullable|email|unique:alumnos,correo',
+            'celular'           => 'nullable|string|max:50',
+            'telefono'          => 'nullable|string|max:50',
+            'fecha_nacimiento'  => 'nullable|date',
+            'tutor'             => 'nullable|string|max:255',
+            'tutor_2'           => 'nullable|string|max:255',
+            'telefono_2'        => 'nullable|string|max:50',
+            'hist_medico'       => 'nullable|string',
+            'beca'              => 'nullable|numeric',
+            'status'            => 'nullable|in:0,1',
         ]);
 
         if ($v->fails()) {
@@ -125,19 +125,18 @@ class AlumnoController extends Controller
         $input = $this->normalize($request->all());
 
         $v = Validator::make($input, [
-            'nombre'        => 'sometimes|required|string|min:2',
-            'apellido'      => 'nullable|string', // quita si tu tabla no lo tiene
-            'correo'        => 'nullable|email|unique:alumnos,correo,' . $id . ',id_alumno',
-            'celular'       => 'nullable|string|max:50',
-            'telefono'      => 'nullable|string|max:50',
-            'fecha_nacimiento'     => 'nullable|date',
-            'tutor'         => 'nullable|string|max:255',
-            'tutor_2'       => 'nullable|string|max:255',
-            'telefono_2'    => 'nullable|string|max:50',
-            'hist_medico'   => 'nullable|string',
-            'beca'          => 'nullable|numeric',
-            'status'        => 'nullable|in:0,1',
-            'observaciones' => 'nullable|string',
+            'nombre'            => 'sometimes|required|string|min:2',
+            'apellido'          => 'nullable|string',
+            'correo'            => 'nullable|email|unique:alumnos,correo,' . $id . ',id_alumno',
+            'celular'           => 'nullable|string|max:50',
+            'telefono'          => 'nullable|string|max:50',
+            'fecha_nacimiento'  => 'nullable|date',
+            'tutor'             => 'nullable|string|max:255',
+            'tutor_2'           => 'nullable|string|max:255',
+            'telefono_2'        => 'nullable|string|max:50',
+            'hist_medico'       => 'nullable|string',
+            'beca'              => 'nullable|numeric',
+            'status'            => 'nullable|in:0,1',
         ]);
 
         if ($v->fails()) {
