@@ -31,6 +31,10 @@ Route::get('alumnos/datos-combinados',   [AlumnoController::class, 'datosCombina
 Route::get('alumnos/{id}/expediente',    [AlumnoController::class, 'expediente'])->whereNumber('id');
 Route::put('alumnos/{id}/expediente',    [AlumnoController::class, 'actualizarExpediente'])->whereNumber('id');
 
+// ALTA y BAJA (aceptar PUT y PATCH)
+Route::match(['PUT','PATCH'], 'alumnos/{id}/baja', [AlumnoController::class, 'baja'])->whereNumber('id');
+Route::match(['PUT','PATCH'], 'alumnos/{id}/alta', [AlumnoController::class, 'alta'])->whereNumber('id');
+
 // ---------- PAGOS ----------
 Route::get('pagos/{id_alumno}',          [PagoController::class, 'byAlumno'])->whereNumber('id_alumno');
 Route::apiResource('pagos',              App\Http\Controllers\PagoController::class);

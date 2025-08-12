@@ -4,21 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Alumno;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class AlumnoController extends Controller
 {
     /**
      * GET /api/alumnos?status=0|1
-     * Lista alumnos (opcionalmente filtrados por status 0/1)
      */
     public function index(Request $request)
     {
         $q = Alumno::query();
 
         if ($request->has('status')) {
-            $s = (int) $request->query('status'); // fuerza 0/1
+            $s = (int) $request->query('status'); // 0/1
             $q->where('status', $s);
         }
 
@@ -27,21 +25,20 @@ class AlumnoController extends Controller
 
     /**
      * GET /api/alumnos/datos-combinados?status=0|1
-     * Devuelve alumnos + conteo de clases (clases_count)
-     * Requiere que el modelo Alumno tenga ->clases()
+     * Requiere relación ->clases() en el modelo
      */
-   public function datosCombinados(Request $request)
-{
-    $q = \App\Models\Alumno::query()
-        ->select('alumnos.*')
-        ->withCount('clases');
+    public function datosCombinados(Request $request)
+    {
+        $q = Alumno::query()
+            ->select('alumnos.*')
+            ->withCount('clases');
 
-    if ($request->has('status')) {
-        $q->where('status', (int) $request->query('status')); // <-- FILTRO
+        if ($request->has('status')) {
+            $q->where('status', (int) $request->query('status'));
+        }
+
+        return response()->json($q->orderBy('id_alumno', 'asc')->get());
     }
-
-    return response()->json($q->orderBy('id_alumno', 'asc')->get());
-}
 
     /**
      * GET /api/alumnos/{id}
@@ -56,23 +53,50 @@ class AlumnoController extends Controller
     }
 
     /**
+     * Normaliza entrada del front:
+     * - Acepta fecha_nacimiento y la mapea a fecha_nac
+     * - Castea status a int 0/1
+     * - Castea beca a float
+     */
+    private function normalize(array $data): array
+    {
+        if (!isset($data['fecha_nac']) && isset($data['fecha_nacimiento'])) {
+            $data['fecha_nac'] = $data['fecha_nacimiento'];
+            unset($data['fecha_nacimiento']);
+        }
+
+        if (isset($data['status'])) {
+            $data['status'] = (int) $data['status'] === 1 ? 1 : 0;
+        }
+
+        if (isset($data['beca']) && $data['beca'] !== '' && $data['beca'] !== null) {
+            $data['beca'] = (float) $data['beca'];
+        }
+
+        return $data;
+    }
+
+    /**
      * POST /api/alumnos
      */
     public function store(Request $request)
     {
-        $v = Validator::make($request->all(), [
-            'nombre'            => 'required|string|min:2',
-            'apellido'          => 'nullable|string',
-            'correo'            => 'nullable|email|unique:alumnos,correo',
-            'celular'           => 'nullable|string|max:50',
-            'telefono'          => 'nullable|string|max:50',
-            'fecha_nacimiento'  => 'nullable|date',
-            'tutor'             => 'nullable|string|max:255',
-            'tutor_2'           => 'nullable|string|max:255',
-            'telefono_2'        => 'nullable|string|max:50',
-            'hist_medico'       => 'nullable|string',
-            'beca'              => 'nullable|string|max:100',
-            'status'            => 'nullable|boolean', // 0/1
+        $input = $this->normalize($request->all());
+
+        $v = Validator::make($input, [
+            'nombre'        => 'required|string|min:2',
+            'apellido'      => 'nullable|string',           // quita si tu tabla no lo tiene
+            'correo'        => 'nullable|email|unique:alumnos,correo',
+            'celular'       => 'nullable|string|max:50',
+            'telefono'      => 'nullable|string|max:50',
+            'fecha_nac'     => 'nullable|date',
+            'tutor'         => 'nullable|string|max:255',
+            'tutor_2'       => 'nullable|string|max:255',
+            'telefono_2'    => 'nullable|string|max:50',
+            'hist_medico'   => 'nullable|string',
+            'beca'          => 'nullable|numeric',
+            'status'        => 'nullable|in:0,1',
+            'observaciones' => 'nullable|string',
         ]);
 
         if ($v->fails()) {
@@ -98,19 +122,22 @@ class AlumnoController extends Controller
             return response()->json(['error' => 'Alumno no encontrado'], 404);
         }
 
-        $v = Validator::make($request->all(), [
-            'nombre'            => 'sometimes|required|string|min:2',
-            'apellido'          => 'nullable|string',
-            'correo'            => 'nullable|email|unique:alumnos,correo,' . $id . ',id_alumno',
-            'celular'           => 'nullable|string|max:50',
-            'telefono'          => 'nullable|string|max:50',
-            'fecha_nacimiento'  => 'nullable|date',
-            'tutor'             => 'nullable|string|max:255',
-            'tutor_2'           => 'nullable|string|max:255',
-            'telefono_2'        => 'nullable|string|max:50',
-            'hist_medico'       => 'nullable|string',
-            'beca'              => 'nullable|string|max:100',
-            'status'            => 'nullable|boolean', // 0/1
+        $input = $this->normalize($request->all());
+
+        $v = Validator::make($input, [
+            'nombre'        => 'sometimes|required|string|min:2',
+            'apellido'      => 'nullable|string', // quita si tu tabla no lo tiene
+            'correo'        => 'nullable|email|unique:alumnos,correo,' . $id . ',id_alumno',
+            'celular'       => 'nullable|string|max:50',
+            'telefono'      => 'nullable|string|max:50',
+            'fecha_nacimiento'     => 'nullable|date',
+            'tutor'         => 'nullable|string|max:255',
+            'tutor_2'       => 'nullable|string|max:255',
+            'telefono_2'    => 'nullable|string|max:50',
+            'hist_medico'   => 'nullable|string',
+            'beca'          => 'nullable|numeric',
+            'status'        => 'nullable|in:0,1',
+            'observaciones' => 'nullable|string',
         ]);
 
         if ($v->fails()) {
@@ -135,13 +162,13 @@ class AlumnoController extends Controller
     }
 
     /**
-     * PUT /api/alumnos/{id}/alta   (ruta personalizada)
-     * Tus rutas usan altaAlumno/bajaAlumno, así que dejamos ambos nombres.
+     * ALTA / BAJA
+     * PUT|PATCH /api/alumnos/{id}/alta
+     * PUT|PATCH /api/alumnos/{id}/baja
      */
     public function altaAlumno($id) { return $this->alta($id); }
     public function bajaAlumno($id) { return $this->baja($id); }
 
-    // Implementación real de alta/baja
     public function alta($id)
     {
         $alumno = Alumno::where('id_alumno', $id)->first();
@@ -161,16 +188,13 @@ class AlumnoController extends Controller
     }
 
     /**
-     * (Opcional) Si usas expediente y actualizaciones
-     * GET /api/alumnos/{id}/expediente
-     * PUT /api/alumnos/{id}/expediente
+     * Expediente (si lo usas)
      */
     public function expediente($id)
     {
         $alumno = Alumno::where('id_alumno', $id)->first();
         if (!$alumno) return response()->json(['error' => 'Alumno no encontrado'], 404);
 
-        // agrega aquí lo que necesites retornar (relaciones, etc.)
         return response()->json($alumno);
     }
 
