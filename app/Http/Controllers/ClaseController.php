@@ -7,63 +7,78 @@ use App\Models\Clase;
 
 class ClaseController extends Controller
 {
-    // Listar todas las clases
     public function index()
     {
         return response()->json(Clase::all());
     }
 
-    // Crear una nueva clase
     public function store(Request $request)
     {
-        $request->validate([
+        // Validación alineada a tu tabla
+        $data = $request->validate([
             'id_programa' => 'required|integer',
             'alumno_id'   => 'required|integer',
-            'nombre'      => 'required|string|max:30',
+            'nombre'      => 'required|string|max:60',  // en BD es 'nombre'
             'id_maestro'  => 'required|string|max:6',
             'informacion' => 'nullable|string|max:100',
             'porcentaje'  => 'nullable|numeric',
             'personal'    => 'nullable|integer',
         ]);
 
-        $clase = Clase::create($request->all());
+        // Defaults para columnas NOT NULL
+        if (!array_key_exists('informacion', $data) || $data['informacion'] === null) {
+            $data['informacion'] = '';
+        }
+        if (!array_key_exists('porcentaje', $data) || $data['porcentaje'] === null) {
+            $data['porcentaje'] = 0;
+        }
+        if (!array_key_exists('personal', $data) || $data['personal'] === null) {
+            $data['personal'] = 0;
+        }
+
+        $clase = Clase::create($data);
         return response()->json($clase, 201);
     }
 
-    // Ver una clase específica
     public function show($id)
     {
         $clase = Clase::findOrFail($id);
         return response()->json($clase);
     }
 
-    // Actualizar clase
     public function update(Request $request, $id)
-{
-    $clase = Clase::findOrFail($id);
+    {
+        $clase = Clase::findOrFail($id);
 
-    // Asigna todos los campos según la base de datos
-    $clase->id_programa = $request->input('id_programa');
-    $clase->alumno_id = $request->input('alumno_id');
-    $clase->nombre_clase = $request->input('nombre_clase');
-    $clase->id_maestro = $request->input('id_maestro');
-    $clase->informacion = $request->input('informacion');
-    $clase->porcentaje = $request->input('porcentaje');
-    $clase->personal = $request->input('personal');
+        $data = $request->validate([
+            'id_programa' => 'sometimes|required|integer',
+            'alumno_id'   => 'sometimes|required|integer',
+            'nombre'      => 'sometimes|required|string|max:60', // en BD es 'nombre'
+            'id_maestro'  => 'sometimes|required|string|max:6',
+            'informacion' => 'nullable|string|max:100',
+            'porcentaje'  => 'nullable|numeric',
+            'personal'    => 'nullable|integer',
+        ]);
 
-    $clase->save();
-    // Opcional: retorna el objeto actualizado
-    return response()->json($clase);
-}
+        // Defaults para NOT NULL
+        if (array_key_exists('informacion', $data) && $data['informacion'] === null) {
+            $data['informacion'] = '';
+        }
+        if (array_key_exists('porcentaje', $data) && $data['porcentaje'] === null) {
+            $data['porcentaje'] = 0;
+        }
+        if (array_key_exists('personal', $data) && $data['personal'] === null) {
+            $data['personal'] = 0;
+        }
 
+        $clase->fill($data)->save();
+        return response()->json($clase);
+    }
 
-
-    // Borrar clase
     public function destroy($id)
     {
         $clase = Clase::findOrFail($id);
         $clase->delete();
-
         return response()->json(['message' => 'Clase eliminada correctamente']);
     }
 }
