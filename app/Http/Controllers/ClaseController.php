@@ -7,30 +7,37 @@ use App\Models\Clase;
 
 class ClaseController extends Controller
 {
-    // GET /api/clases
-    public function index(Request $request)
+    public function index()
     {
-        try {
-            $q = Clase::query();
+        return response()->json(Clase::all());
+    }
 
-            if ($request->has('status')) {
-                $q->where('status', (int) $request->query('status'));
-            }
+    public function store(Request $request)
+    {
+        // Validación alineada a tu tabla
+        $data = $request->validate([
+            'id_programa' => 'required|integer',
+            'alumno_id'   => 'required|integer',
+            'nombre'      => 'required|string|max:60',  // en BD es 'nombre'
+            'id_maestro'  => 'required|string|max:6',
+            'informacion' => 'nullable|string|max:100',
+            'porcentaje'  => 'nullable|numeric',
+            'personal'    => 'nullable|integer',
+        ]);
 
-            // Ordenar por la PK real del modelo (evita errores con 'id' vs 'id_clase')
-            $pk = (new Clase)->getKeyName();
-
-            // Descomenta si necesitas relaciones:
-            // $q->with(['alumno']);
-
-            return response()->json($q->orderBy($pk, 'asc')->get());
-        } catch (\Throwable $e) {
-            // Respuesta visible para depurar desde el front durante desarrollo
-            return response()->json([
-                'message' => 'Error listando clases',
-                'error'   => $e->getMessage(),
-            ], 500);
+        // Defaults para columnas NOT NULL
+        if (!array_key_exists('informacion', $data) || $data['informacion'] === null) {
+            $data['informacion'] = '';
         }
+        if (!array_key_exists('porcentaje', $data) || $data['porcentaje'] === null) {
+            $data['porcentaje'] = 0;
+        }
+        if (!array_key_exists('personal', $data) || $data['personal'] === null) {
+            $data['personal'] = 0;
+        }
+
+        $clase = Clase::create($data);
+        return response()->json($clase, 201);
     }
     public function byAlumno($id_alumno)
 {
@@ -44,44 +51,45 @@ class ClaseController extends Controller
 }
 
 
-    // GET /api/clases/{id}
     public function show($id)
     {
         $clase = Clase::findOrFail($id);
         return response()->json($clase);
     }
 
-    // POST /api/clases
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            // 'alumno_id' => 'required|integer|exists:alumnos,id_alumno',
-            // 'materia'   => 'required|string|max:255',
-            // 'status'    => 'required|in:0,1',
-        ]);
-
-        $clase = Clase::create($data);
-        return response()->json($clase, 201);
-    }
-
-    // PUT /api/clases/{id}
     public function update(Request $request, $id)
     {
         $clase = Clase::findOrFail($id);
 
         $data = $request->validate([
-            // reglas nullable para edición
+            'id_programa' => 'sometimes|required|integer',
+            'alumno_id'   => 'sometimes|required|integer',
+            'nombre'      => 'sometimes|required|string|max:60', // en BD es 'nombre'
+            'id_maestro'  => 'sometimes|required|string|max:6',
+            'informacion' => 'nullable|string|max:100',
+            'porcentaje'  => 'nullable|numeric',
+            'personal'    => 'nullable|integer',
         ]);
 
-        $clase->update($data);
+        // Defaults para NOT NULL
+        if (array_key_exists('informacion', $data) && $data['informacion'] === null) {
+            $data['informacion'] = '';
+        }
+        if (array_key_exists('porcentaje', $data) && $data['porcentaje'] === null) {
+            $data['porcentaje'] = 0;
+        }
+        if (array_key_exists('personal', $data) && $data['personal'] === null) {
+            $data['personal'] = 0;
+        }
+
+        $clase->fill($data)->save();
         return response()->json($clase);
     }
 
-    // DELETE /api/clases/{id}
     public function destroy($id)
     {
         $clase = Clase::findOrFail($id);
         $clase->delete();
-        return response()->json(['message' => 'Clase eliminada']);
+        return response()->json(['message' => 'Clase eliminada correctamente']);
     }
 }
