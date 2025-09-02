@@ -32,6 +32,17 @@ class ClaseController extends Controller
             ], 500);
         }
     }
+    public function byAlumno($id_alumno)
+{
+    $pagos = \App\Models\Pago::query()
+        ->with('alumno') // opcional, si tienes la relación en el modelo Pago
+        ->where('id_alumno', $id_alumno) // cambia si la FK tiene otro nombre
+        ->orderByDesc('fecha') // ajusta si tu campo de fecha se llama distinto
+        ->get();
+
+    return response()->json($pagos);
+}
+
 
     // GET /api/clases/{id}
     public function show($id)

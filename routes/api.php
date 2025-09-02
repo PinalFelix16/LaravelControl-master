@@ -34,6 +34,14 @@ Route::put('alumnos/{id}/expediente',    [AlumnoController::class, 'actualizarEx
 // ALTA y BAJA (aceptar PUT y PATCH)
 Route::match(['PUT','PATCH'], 'alumnos/{id}/baja', [AlumnoController::class, 'baja'])->whereNumber('id');
 Route::match(['PUT','PATCH'], 'alumnos/{id}/alta', [AlumnoController::class, 'alta'])->whereNumber('id');
+// ---------- PAGOS ----------
+// Nueva ruta para obtener pagos por alumno
+Route::get('alumnos/{id_alumno}/pagos', [PagoController::class, 'byAlumno'])
+    ->whereNumber('id_alumno');
+
+Route::apiResource('pagos', App\Http\Controllers\PagoController::class);
+Route::get('pagos/{id}/imprimir', [App\Http\Controllers\PagoController::class, 'imprimirRecibo']);
+Route::get('pagos/{id}/recibo-pdf', [App\Http\Controllers\PagoController::class, 'generarReciboPDF']);
 
 // ---------- PAGOS ----------
 Route::get('pagos/{id_alumno}',          [PagoController::class, 'byAlumno'])->whereNumber('id_alumno');
